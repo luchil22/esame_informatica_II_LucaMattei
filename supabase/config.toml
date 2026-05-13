@@ -1,0 +1,8 @@
+# Configurazione Edge Functions Supabase per AttesaZero
+
+project_id = "udkvxoaxivulititdpmm"
+
+[functions.spiega-referto]
+# Richiede JWT valido a livello di runtime Supabase.
+# La function effettua comunque un secondo controllo ownership via RLS.
+verify_jwt = true

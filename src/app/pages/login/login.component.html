@@ -1,0 +1,158 @@
+<div class="az-login-shell" style="display:flex;min-height:100vh;flex-wrap:wrap;">
+
+  <!-- Pannello sinistro verde scuro -->
+  <div class="az-login-panel">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:48px;">
+      <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,0.13);display:flex;align-items:center;justify-content:center;color:white;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2v6l4 4-4 4v6h12v-6l-4-4 4-4V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm0-9L12 11.5 8 7.5V4h8v3.5z"/></svg>
+      </div>
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:17px;color:white;letter-spacing:-0.4px;">AttesaZero</span>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+      <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:30px;color:white;letter-spacing:-0.8px;line-height:1.18;margin-bottom:14px;">
+        La sanità pubblica,<br>finalmente trasparente.
+      </h1>
+      <p style="font-size:14px;color:rgba(255,255,255,0.50);line-height:1.65;margin-bottom:36px;">
+        Parte delle funzioni è libera e pubblica.<br>L'account sblocca la sezione personale.
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:18px;">
+        <!-- Funzione pubblica -->
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.09);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.70);flex-shrink:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.88);margin-bottom:2px;display:flex;align-items:center;gap:6px;">
+              Tempi di attesa
+              <span style="font-size:9px;padding:1px 6px;border-radius:999px;background:rgba(93,219,160,0.18);color:#5DDBA0;font-weight:700;">LIBERO</span>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.40);">Dato ASDAA + esperienze cittadini</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.09);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.70);flex-shrink:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2"/><path d="M12 8v8M8 12h8"/></svg>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.88);margin-bottom:2px;display:flex;align-items:center;gap:6px;">
+              PS live in tempo reale
+              <span style="font-size:9px;padding:1px 6px;border-radius:999px;background:rgba(93,219,160,0.18);color:#5DDBA0;font-weight:700;">LIBERO</span>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.40);">9 pronto soccorso dell'Alto Adige</div>
+          </div>
+        </div>
+
+        <div style="height:1px;background:rgba(255,255,255,0.07);margin:4px 0;"></div>
+
+        <!-- Funzione con lock -->
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.30);flex-shrink:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.40);margin-bottom:2px;">Referti e area personale</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.22);">Richiede account verificato</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:rgba(255,255,255,0.22);">Provincia Autonoma di Bolzano · ASDAA · MVP 2025</div>
+  </div>
+
+  <!-- Form -->
+  <div class="az-login-form-col" style="flex:1;display:flex;align-items:center;justify-content:center;padding:60px;background:var(--az-bg);min-width:0;">
+    <div style="width:100%;max-width:400px;">
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:26px;color:var(--az-text);letter-spacing:-0.5px;margin-bottom:6px;">
+        {{ mostraRegistrazione ? 'Crea il tuo account' : 'Accedi al tuo account' }}
+      </h2>
+      <p style="font-size:14px;color:var(--az-muted);margin-bottom:32px;">
+        {{ mostraRegistrazione ? 'Hai già un account?' : 'Nuovo?' }}
+        <button style="background:none;border:none;font-size:14px;color:var(--az-primary);font-weight:600;cursor:pointer;padding:0;"
+                (click)="cambiaModalita()"
+                [attr.aria-label]="mostraRegistrazione ? 'Vai al login' : 'Vai alla registrazione'">
+          {{ mostraRegistrazione ? 'Accedi' : 'Crea un account gratuito' }}
+        </button>
+      </p>
+
+      @if (errore()) {
+        <div class="az-alert az-alert-danger" role="alert">{{ errore() }}</div>
+      }
+
+      @if (successo()) {
+        <div class="az-alert az-alert-success" role="alert" style="margin-bottom:16px;">
+          {{ successo() }}
+        </div>
+      }
+
+      <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:20px;">
+        <div>
+          <label for="email" class="az-label" style="display:block;margin-bottom:6px;">Email</label>
+          <input id="email" type="email" class="az-input"
+            [value]="email()"
+            (input)="email.set($any($event.target).value)"
+            placeholder="nome@esempio.it"
+            aria-label="Indirizzo email" />
+        </div>
+
+        <div>
+          <label for="password" class="az-label" style="display:block;margin-bottom:6px;">Password</label>
+          <input id="password" type="password" class="az-input"
+            [value]="password()"
+            (input)="password.set($any($event.target).value)"
+            (keyup.enter)="mostraRegistrazione ? registrati() : accedi()"
+            [attr.placeholder]="mostraRegistrazione ? 'Almeno 8 caratteri' : '••••••••'"
+            [attr.aria-describedby]="mostraRegistrazione ? 'password-hint' : null"
+            aria-label="Password" />
+          @if (mostraRegistrazione) {
+            <div id="password-hint" style="font-size:11.5px;color:var(--az-muted);margin-top:6px;">
+              Usa almeno 8 caratteri.
+            </div>
+          }
+        </div>
+
+        @if (mostraRegistrazione) {
+          <div>
+            <label for="conferma-password" class="az-label" style="display:block;margin-bottom:6px;">Conferma password</label>
+            <input id="conferma-password" type="password" class="az-input"
+              [value]="confermaPassword()"
+              (input)="confermaPassword.set($any($event.target).value)"
+              (keyup.enter)="registrati()"
+              placeholder="Ripeti la password"
+              aria-label="Conferma password" />
+          </div>
+        }
+
+        @if (caricamento()) {
+          <div class="az-spinner-wrap" role="status"><div class="az-spinner"></div></div>
+        } @else {
+          <button class="az-btn az-btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;"
+                  (click)="mostraRegistrazione ? registrati() : accedi()"
+                  [attr.aria-label]="mostraRegistrazione ? 'Crea account' : 'Accedi'">
+            {{ mostraRegistrazione ? 'Registrati' : 'Accedi' }}
+          </button>
+        }
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;height:1px;background:var(--az-border);"></div>
+        <span style="font-size:12px;color:var(--az-muted);">oppure</span>
+        <div style="flex:1;height:1px;background:var(--az-border);"></div>
+      </div>
+
+      <a class="az-guest-cta" routerLink="/esplora" aria-label="Esplora senza account">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--az-sub);margin-bottom:2px;">Esplora senza account</div>
+          <div style="font-size:11.5px;color:var(--az-muted);">Tempi di attesa e PS live sono pubblici</div>
+        </div>
+        <span style="color:var(--az-primary);display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;flex-shrink:0;">
+          Continua
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
+      </a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,234 @@
+<!-- TopBar -->
+<div class="az-topbar">
+  <span class="az-topbar-label">Le mie attese</span>
+  <div class="az-topbar-actions">
+    <a class="az-btn az-btn-ghost" routerLink="/referti" aria-label="Vai ai referti">Referti</a>
+    <button class="az-btn az-btn-primary" (click)="mostraForm.set(!mostraForm())" aria-label="Aggiungi una nuova attesa">
+      + Aggiungi attesa
+    </button>
+  </div>
+</div>
+
+<div class="az-content">
+  <div style="margin-bottom:20px;">
+    <h1 class="az-page-title" style="margin-bottom:4px;">Ciao, {{ getEmailShort() }}</h1>
+    <p style="font-size:13px;color:var(--az-muted);margin:0;">Monitora le prestazioni che stai aspettando e i tuoi diritti.</p>
+  </div>
+
+  @if (caricamento()) {
+    <div class="az-spinner-wrap" role="status">
+      <div class="az-spinner"></div>
+      <span class="visually-hidden">Caricamento in corso...</span>
+    </div>
+  }
+
+  @if (errore()) {
+    <div class="az-alert az-alert-danger" role="alert">{{ errore() }}</div>
+  }
+  @if (successo()) {
+    <div class="az-alert az-alert-success" role="alert">{{ successo() }}</div>
+  }
+
+  <!-- Banner allerta: attese sopra soglia -->
+  @if (conteggioRosso() > 0) {
+    <div style="padding:14px 16px;border-radius:12px;background:rgba(196,46,46,0.06);border:1px solid rgba(196,46,46,0.20);margin-bottom:18px;display:flex;align-items:center;gap:12px;" role="alert">
+      <span style="font-size:22px;" aria-hidden="true">⚠️</span>
+      <div style="flex:1;">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:var(--az-red);margin-bottom:2px;">
+          {{ conteggioRosso() }} attesa/e oltre la soglia di legge
+        </div>
+        <div style="font-size:12px;color:var(--az-sub);">Hai diritto a richiedere la prestazione in struttura privata accreditata a carico SSN.</div>
+      </div>
+      <a routerLink="/diritti" class="az-btn az-btn-ghost" aria-label="Scopri come richiedere il rimborso">Come fare</a>
+    </div>
+  }
+
+  <!-- Form aggiunta attesa -->
+  @if (mostraForm()) {
+    <div class="az-card" style="margin-bottom:18px;">
+      <div class="az-card-body">
+        <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--az-text);margin-bottom:14px;">Aggiungi una nuova attesa</h2>
+
+        <div class="az-form-row">
+          <div class="az-field az-field-lg">
+            <label for="attPrestazione" class="az-label">Prestazione</label>
+            <input id="attPrestazione" type="text" class="az-input"
+              placeholder="Es. Visita cardiologica"
+              [value]="prestazione()"
+              (input)="prestazione.set($any($event.target).value)"
+              aria-label="Nome della prestazione" />
+          </div>
+
+          <div class="az-field az-field-md">
+            <label for="attPriorita" class="az-label">Priorità</label>
+            <select id="attPriorita" class="az-select"
+              [value]="priorita()"
+              (change)="priorita.set($any($event.target).value)"
+              aria-label="Classe di priorità">
+              <option value="U">U — Urgente (3 gg)</option>
+              <option value="B">B — Breve (10 gg)</option>
+              <option value="D">D — Differibile (30 gg)</option>
+              <option value="P">P — Programmabile (120 gg)</option>
+            </select>
+          </div>
+
+          <div class="az-field az-field-md">
+            <label for="attData" class="az-label">Data prenotazione</label>
+            <input id="attData" type="date" class="az-input"
+              [value]="dataPrenotazione()"
+              (input)="dataPrenotazione.set($any($event.target).value)"
+              aria-label="Data della prenotazione" />
+          </div>
+
+          <div class="az-field az-field-md">
+            <label for="attStruttura" class="az-label">Struttura (opzionale)</label>
+            <input id="attStruttura" type="text" class="az-input"
+              placeholder="Es. Ospedale di Bolzano"
+              [value]="struttura()"
+              (input)="struttura.set($any($event.target).value)"
+              aria-label="Struttura sanitaria" />
+          </div>
+
+          <div class="az-field az-field-btn">
+            <button class="az-btn az-btn-primary" style="width:100%;justify-content:center;"
+              (click)="salvaAttesa()"
+              aria-label="Salva la nuova attesa">Salva</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Lista attese -->
+  <div class="az-card">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--az-border);display:flex;align-items:center;justify-content:space-between;">
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--az-text);margin:0;">Attese attive</h2>
+      <span style="font-size:12px;color:var(--az-muted);">{{ attese().length }} prestazioni</span>
+    </div>
+    <div class="az-card-body">
+      @if (!caricamento() && attese().length === 0) {
+        <p style="color:var(--az-muted);font-size:13px;margin:0;">
+          Nessuna attesa registrata. Aggiungine una con il bottone in alto, oppure parti da
+          <a routerLink="/esplora" style="color:var(--az-primary);">Esplora →</a>
+        </p>
+      } @else {
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          @for (a of attese(); track a.id) {
+            <div style="padding:16px 18px;border-radius:12px;background:var(--az-surface);border:1px solid var(--az-border);">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:180px;">
+                  <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:var(--az-text);margin-bottom:3px;">
+                    {{ a.prestazione }}
+                  </div>
+                  <div style="font-size:12px;color:var(--az-muted);">
+                    Classe {{ a.priorita }} · {{ etichettaPriorita(a.priorita) }}
+                    @if (a.struttura) { · {{ a.struttura }} }
+                  </div>
+                  <div style="font-size:12px;color:var(--az-muted);margin-top:2px;">
+                    Prenotata il {{ a.data_prenotazione | date:'d MMM y' }}
+                  </div>
+                </div>
+                <span [style]="'padding:4px 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:0.4px;' + coloreBadge(a.stato)">
+                  {{ testoStato(a).toUpperCase() }}
+                </span>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 12px;border-radius:9px;background:var(--az-input-bg);border:1px solid var(--az-border);">
+                <div>
+                  <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:var(--az-text);">{{ a.giorniPassati }}</span>
+                  <span style="font-size:11px;color:var(--az-muted);margin-left:3px;">gg trascorsi</span>
+                </div>
+                <div style="opacity:0.4;">/</div>
+                <div>
+                  <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--az-sub);">{{ a.giorniMaxLegge }}</span>
+                  <span style="font-size:11px;color:var(--az-muted);margin-left:3px;">gg soglia</span>
+                </div>
+                <div style="margin-left:auto;font-size:12px;font-weight:600;"
+                  [style.color]="a.stato==='rosso'?'var(--az-red)':(a.stato==='giallo'?'#B05000':'#1F7A3D')">
+                  @if (a.giorniRimanenti >= 0) {
+                    Mancano {{ a.giorniRimanenti }} gg
+                  } @else {
+                    Oltre soglia di {{ -a.giorniRimanenti }} gg
+                  }
+                </div>
+              </div>
+
+              @if (a.dirittoRimborso) {
+                <div style="margin-top:10px;padding:10px 12px;border-radius:9px;background:rgba(196,46,46,0.06);border:1px solid rgba(196,46,46,0.18);font-size:12px;color:var(--az-red);line-height:1.5;">
+                  <strong>Hai diritto al rimborso.</strong> Richiedi la prestazione in struttura privata accreditata: l'ASDAA è tenuta a coprirne i costi.
+                </div>
+              }
+
+              <div style="margin-top:10px;display:flex;justify-content:flex-end;gap:8px;">
+                <button class="az-btn az-btn-ghost" style="font-size:12px;padding:6px 12px;"
+                  (click)="eliminaAttesa(a.id!)"
+                  aria-label="Elimina questa attesa">Elimina</button>
+                <button class="az-btn az-btn-primary" style="font-size:12px;padding:6px 12px;"
+                  (click)="apriCompletamento(a)"
+                  aria-label="Segna la visita come effettuata">✓ Visita effettuata</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Referti recenti -->
+  @if (referti().length > 0) {
+    <div class="az-card" style="margin-top:18px;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--az-border);display:flex;align-items:center;justify-content:space-between;">
+        <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--az-text);margin:0;">Referti recenti</h2>
+        <a routerLink="/referti" style="font-size:12px;color:var(--az-primary);font-weight:600;text-decoration:none;" aria-label="Vedi tutti i referti">Vedi tutti →</a>
+      </div>
+      <div class="az-card-body">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          @for (r of referti(); track r.id) {
+            <div style="padding:10px 14px;border-radius:10px;background:var(--az-surface);border:1px solid var(--az-border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                <span style="font-size:18px;" aria-hidden="true">📄</span>
+                <span style="font-size:13px;color:var(--az-text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.nome_file }}</span>
+              </div>
+              <span style="font-size:11px;color:var(--az-muted);">{{ r.created_at | date:'d MMM' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <div style="margin-top:24px;text-align:right;">
+    <button class="az-btn az-btn-ghost" (click)="esciDalSito()" aria-label="Esci dall'account">
+      Esci dall'account
+    </button>
+  </div>
+</div>
+
+<!-- Modale completamento attesa -->
+@if (attesaInCompletamento(); as a) {
+  <div role="dialog" aria-modal="true" aria-label="Segna la visita come effettuata"
+    style="position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000;"
+    (click)="chiudiCompletamento()">
+    <div style="background:var(--az-card);border-radius:14px;max-width:440px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.2);"
+      (click)="$event.stopPropagation()">
+      <h3 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:17px;color:var(--az-text);margin:0 0 6px 0;">Visita effettuata</h3>
+      <p style="font-size:13px;color:var(--az-muted);margin-bottom:18px;">
+        <strong>{{ a.prestazione }}</strong> · Classe {{ a.priorita }}<br>
+        Conferma i giorni di attesa reali per aiutare altri utenti.
+      </p>
+
+      <div class="az-field" style="margin-bottom:18px;">
+        <label for="ggReali" class="az-label">Giorni di attesa effettivi</label>
+        <input id="ggReali" type="number" min="0" class="az-input"
+          [value]="giorniReali()"
+          (input)="giorniReali.set(+$any($event.target).value)"
+          aria-label="Giorni di attesa reali" />
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="az-btn az-btn-ghost" (click)="chiudiCompletamento()" aria-label="Annulla">Annulla</button>
+        <button class="az-btn az-btn-primary" (click)="confermaCompletamento()" aria-label="Conferma e invia">Conferma</button>
+      </div>
+    </div>
+  </div>
+}

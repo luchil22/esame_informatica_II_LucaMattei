@@ -1,0 +1,383 @@
+<!-- TopBar -->
+<div class="az-topbar">
+  <span class="az-topbar-label">Referti</span>
+</div>
+
+<div class="az-content">
+  <h1 class="az-page-title">I miei referti</h1>
+
+  <!-- Upload -->
+  <div class="az-card">
+    <div class="az-card-body">
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--az-text);margin-bottom:16px;">Carica un nuovo referto</h2>
+
+      @if (errore()) {
+        <div class="az-alert az-alert-danger" role="alert">{{ errore() }}</div>
+      }
+      @if (successo()) {
+        <div class="az-alert az-alert-success" role="alert">{{ successo() }}</div>
+      }
+
+      <!-- Drop zone — nascosta dopo la selezione del file -->
+      @if (!fileScelto()) {
+        <label
+          for="fileReferto"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()"
+          (drop)="onDrop($event)"
+          style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+                 padding:36px 20px;border-radius:13px;cursor:pointer;text-align:center;
+                 border:2px dashed;transition:border-color 0.15s,background 0.15s;"
+          [style.border-color]="dragSopra() ? 'var(--az-primary)' : 'var(--az-border)'"
+          [style.background]="dragSopra() ? 'var(--az-primary-x)' : 'var(--az-input-bg)'"
+          aria-label="Area per il trascinamento del file PDF">
+
+          <!-- Icona caricamento -->
+          <div style="width:48px;height:48px;border-radius:12px;background:var(--az-primary-x);
+                      display:flex;align-items:center;justify-content:center;color:var(--az-primary);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+
+          <div>
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;
+                        color:var(--az-text);margin-bottom:4px;">
+              Trascina il PDF qui oppure
+              <span style="color:var(--az-primary);text-decoration:underline;">sfoglia</span>
+            </div>
+            <div style="font-size:12px;color:var(--az-muted);">Solo file PDF · Max 10 MB</div>
+          </div>
+
+          <input
+            id="fileReferto"
+            type="file"
+            accept=".pdf"
+            style="display:none;"
+            (change)="selezioneFile($event)"
+            aria-label="Seleziona il file PDF del referto" />
+        </label>
+      }
+
+      <!-- Preview file scelto — appare dopo la selezione -->
+      @if (fileScelto()) {
+        <div style="padding:14px;border-radius:12px;background:var(--az-primary-x);
+                    border:1.5px solid var(--az-primary-b);display:flex;align-items:center;gap:14px;">
+          <!-- Icona PDF -->
+          <div style="width:42px;height:42px;border-radius:10px;background:var(--az-primary);
+                      display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <!-- Nome e dimensione -->
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;
+                        color:var(--az-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {{ fileScelto()!.name }}
+            </div>
+            <div style="font-size:12px;color:var(--az-primary);margin-top:2px;font-weight:500;">
+              {{ formattaDimensione(fileScelto()!.size) }}
+            </div>
+          </div>
+          <!-- Azioni -->
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            <button
+              class="az-btn az-btn-ghost"
+              style="font-size:12px;padding:6px 12px;"
+              (click)="annullaScelta()"
+              [disabled]="uploading()"
+              aria-label="Annulla selezione file">
+              Annulla
+            </button>
+            <button
+              class="az-btn az-btn-primary"
+              style="font-size:13px;padding:6px 16px;"
+              (click)="caricaReferto()"
+              [disabled]="uploading()"
+              aria-label="Carica il referto selezionato">
+              @if (uploading()) {
+                <span class="az-spinner" style="width:14px;height:14px;border-width:2px;" aria-hidden="true"></span>
+                <span class="visually-hidden">Caricamento...</span>
+                Caricamento…
+              } @else {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Carica referto
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+
+  <!-- Lista referti -->
+  <div class="az-card">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--az-border);">
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--az-text);margin:0;">Referti caricati</h2>
+    </div>
+    <div class="az-card-body">
+      @if (caricamento()) {
+        <div class="az-spinner-wrap" role="status"><div class="az-spinner"></div></div>
+      } @else if (referti().length === 0) {
+        <p style="color:var(--az-muted);font-size:13px;margin:0;">Nessun referto caricato.</p>
+      } @else {
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          @for (referto of referti(); track referto.id) {
+            <!-- Card referto -->
+            <div>
+              <div class="az-referto-row" style="padding:13px 14px;border-radius:11px;background:var(--az-surface);border:1px solid var(--az-border);display:flex;align-items:center;gap:12px;">
+                <!-- Icona PDF -->
+                <div style="width:36px;height:36px;border-radius:9px;background:var(--az-primary-x);display:flex;align-items:center;justify-content:center;color:var(--az-primary);flex-shrink:0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <!-- Nome e data -->
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;color:var(--az-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ referto.nome_file }}</div>
+                  <div style="font-size:11px;color:var(--az-muted);margin-top:2px;">{{ referto.created_at | date:'d MMM y' }}</div>
+                </div>
+                <span style="padding:2px 8px;border-radius:999px;background:var(--az-primary-x);color:var(--az-primary);font-size:11px;font-weight:600;flex-shrink:0;">PDF</span>
+                <div class="az-referto-actions" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <!-- Bottone verifica AI -->
+                @if (refertoDaVerificare()?.id === referto.id) {
+                  <button
+                    class="az-btn az-btn-ghost"
+                    style="font-size:12px;padding:4px 10px;flex-shrink:0;"
+                    (click)="chiudiVerifica()"
+                    aria-label="Chiudi verifica AI">
+                    Chiudi ✕
+                  </button>
+                } @else {
+                  <button
+                    class="az-btn az-btn-ghost"
+                    style="font-size:12px;padding:4px 10px;flex-shrink:0;"
+                    (click)="apriVerifica(referto)"
+                    aria-label="Verifica questo referto con AI">
+                    Verifica con AI
+                  </button>
+                }
+
+                <!-- Bottoni eliminazione — mostra conferma al primo clic -->
+                @if (refertoInEliminazione() === referto.id) {
+                  <button
+                    class="az-btn az-btn-ghost"
+                    style="font-size:12px;padding:4px 10px;flex-shrink:0;color:var(--az-muted);"
+                    (click)="annullaEliminazione()"
+                    [disabled]="eliminando()"
+                    aria-label="Annulla eliminazione">
+                    Annulla
+                  </button>
+                  <button
+                    class="az-btn"
+                    style="font-size:12px;padding:4px 10px;flex-shrink:0;background:#ef4444;color:white;border:none;"
+                    (click)="eliminaReferto(referto)"
+                    [disabled]="eliminando()"
+                    aria-label="Conferma eliminazione referto">
+                    @if (eliminando()) {
+                      <span class="az-spinner" style="width:12px;height:12px;border-width:2px;" aria-hidden="true"></span>
+                      <span class="visually-hidden">Eliminazione...</span>
+                    } @else {
+                      Conferma
+                    }
+                  </button>
+                } @else {
+                  <button
+                    class="az-btn az-btn-ghost"
+                    style="font-size:12px;padding:4px 8px;flex-shrink:0;color:#ef4444;"
+                    (click)="richiestaEliminazione(referto.id)"
+                    aria-label="Elimina referto">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                }
+                </div>
+              </div>
+
+              <!-- Pannello verifica AI — appare solo per il referto selezionato -->
+              @if (refertoDaVerificare()?.id === referto.id) {
+                <div style="margin-top:8px;padding:20px;border-radius:11px;background:var(--az-surface);border:1px solid var(--az-border);" role="region" aria-label="Pannello verifica AI referto">
+
+                  <!-- Layout due colonne: PDF a sinistra, AI a destra -->
+                  <div class="flex flex-wrap gap-4">
+
+                    <!-- Colonna PDF -->
+                    <div class="w-full lg:w-5/12">
+                      <div style="font-size:11px;font-weight:600;color:var(--az-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">
+                        Documento
+                      </div>
+                      <!-- Badge nome file -->
+                      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--az-bg);border:1px solid var(--az-border);margin-bottom:10px;">
+                        <span style="padding:2px 7px;border-radius:5px;background:var(--az-primary);color:white;font-size:10px;font-weight:700;flex-shrink:0;">PDF</span>
+                        <span style="font-size:12px;color:var(--az-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;">{{ referto.nome_file }}</span>
+                      </div>
+                      <!-- Preview PDF con iframe -->
+                      @if (urlPdfSicuro()) {
+                        <iframe
+                          [src]="urlPdfSicuro()"
+                          style="width:100%;height:460px;border:none;border-radius:9px;background:#f5f5f5;"
+                          title="Anteprima referto PDF"
+                          aria-label="Anteprima del referto PDF">
+                        </iframe>
+                      } @else {
+                        <div style="width:100%;height:200px;border-radius:9px;background:var(--az-bg);border:1px solid var(--az-border);display:flex;align-items:center;justify-content:center;">
+                          <div class="az-spinner" aria-hidden="true" style="width:20px;height:20px;border-width:2px;"></div>
+                          <span class="visually-hidden">Caricamento anteprima...</span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Colonna analisi AI -->
+                    <div class="w-full lg:w-7/12">
+
+                      <!-- Consenso — mostrato solo se non c'è ancora una spiegazione -->
+                      @if (!spiegazione() && !spiegazioneStrutturata() && !elaborazione()) {
+                        <div style="font-size:11px;font-weight:600;color:var(--az-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">
+                          Analisi AI
+                        </div>
+                        <div style="padding:14px;border-radius:9px;background:#fff8e1;border:1px solid #ffe082;margin-bottom:14px;">
+                          <p style="font-size:12px;color:#7b5e00;margin:0 0 10px 0;">
+                            Il documento PDF verrà inviato a un servizio esterno (Google Gemini) per l'analisi automatica.
+                            Il contenuto non viene memorizzato da terze parti oltre la cache locale.
+                          </p>
+                          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;color:var(--az-text);">
+                            <input
+                              type="checkbox"
+                              [checked]="consensoDato()"
+                              (change)="aggiornaConsenso($event)"
+                              aria-label="Autorizzo l'analisi del PDF tramite AI"
+                              style="margin-top:2px;flex-shrink:0;" />
+                            Autorizzo l'analisi di questo documento tramite AI
+                          </label>
+                        </div>
+                        <button
+                          class="az-btn az-btn-primary"
+                          style="font-size:13px;"
+                          [disabled]="!consensoDato()"
+                          (click)="analizzaReferto()"
+                          aria-label="Avvia analisi AI del referto">
+                          Analizza referto
+                        </button>
+                      }
+
+                      <!-- Spinner elaborazione -->
+                      @if (elaborazione()) {
+                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0;gap:12px;" role="status">
+                          <div class="az-spinner" style="width:28px;height:28px;border-width:3px;"></div>
+                          <span style="font-size:13px;color:var(--az-muted);">Analisi in corso…</span>
+                          <span class="visually-hidden">Analisi in corso...</span>
+                        </div>
+                      }
+
+                      <!-- Errore -->
+                      @if (spiegazioneErrore()) {
+                        <div class="az-alert az-alert-danger" role="alert">{{ spiegazioneErrore() }}</div>
+                      }
+
+                      <!-- Risultato strutturato JSON -->
+                      @if (spiegazioneStrutturata()) {
+                        <!-- Header Spiegazione AI -->
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:26px;height:26px;border-radius:7px;background:var(--az-primary);display:flex;align-items:center;justify-content:center;color:white;" aria-hidden="true">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            </div>
+                            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:var(--az-text);">Spiegazione AI</span>
+                          </div>
+                          <span style="font-size:11px;color:var(--az-muted);">Generato · {{ referto.created_at | date:'d MMM y' }}</span>
+                        </div>
+
+                        <!-- Sommario -->
+                        <div style="background:var(--az-bg);border-left:3px solid var(--az-primary);padding:12px 14px;border-radius:0 8px 8px 0;margin-bottom:16px;">
+                          <p style="font-size:13px;color:var(--az-text);line-height:1.6;margin:0;font-style:italic;">"{{ spiegazioneStrutturata()!.sommario }}"</p>
+                        </div>
+
+                        <!-- Valori -->
+                        @if (spiegazioneStrutturata()!.valori.length > 0) {
+                          <div style="margin-bottom:16px;">
+                            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;color:var(--az-text);margin-bottom:10px;">Valori da tenere d'occhio</div>
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                              @for (valore of spiegazioneStrutturata()!.valori; track valore.nome) {
+                                <div style="padding:11px 13px;border-radius:9px;background:var(--az-bg);border:1px solid var(--az-border);display:flex;align-items:center;gap:12px;">
+                                  <!-- Nome e nota -->
+                                  <div style="flex:1;min-width:0;">
+                                    <div style="font-weight:600;font-size:13px;color:var(--az-text);">{{ valore.nome }}</div>
+                                    <div style="font-size:11px;color:var(--az-muted);margin-top:2px;">{{ valore.nota }}</div>
+                                  </div>
+                                  <!-- Valore e riferimento -->
+                                  <div style="text-align:right;flex-shrink:0;">
+                                    <div style="font-weight:700;font-size:14px;"
+                                         [style.color]="valore.stato === 'normale' ? '#16a34a' : valore.stato === 'attenzione' ? '#d97706' : '#dc2626'">
+                                      {{ valore.valore }}
+                                    </div>
+                                    <div style="font-size:10px;color:var(--az-muted);margin-top:1px;">rif. {{ valore.riferimento }}</div>
+                                  </div>
+                                  <!-- Badge stato -->
+                                  @if (valore.stato === 'normale') {
+                                    <span style="padding:3px 9px;border-radius:999px;background:#dcfce7;color:#16a34a;font-size:11px;font-weight:600;flex-shrink:0;">✓ Normale</span>
+                                  } @else if (valore.stato === 'attenzione') {
+                                    <span style="padding:3px 9px;border-radius:999px;background:#fef3c7;color:#d97706;font-size:11px;font-weight:600;flex-shrink:0;">⚠ Attenzione</span>
+                                  } @else {
+                                    <span style="padding:3px 9px;border-radius:999px;background:#fee2e2;color:#dc2626;font-size:11px;font-weight:600;flex-shrink:0;">✗ Critico</span>
+                                  }
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        }
+
+                        <!-- Domande -->
+                        @if (spiegazioneStrutturata()!.domande.length > 0) {
+                          <div style="margin-bottom:16px;">
+                            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;color:var(--az-text);margin-bottom:10px;">Domande utili da fare al medico</div>
+                            <div style="display:flex;flex-direction:column;gap:6px;">
+                              @for (domanda of spiegazioneStrutturata()!.domande; track $index) {
+                                <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:9px;background:var(--az-bg);border:1px solid var(--az-border);">
+                                  <span style="width:20px;height:20px;border-radius:50%;background:var(--az-primary-x);color:var(--az-primary);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;" aria-hidden="true">{{ $index + 1 }}</span>
+                                  <span style="font-size:13px;color:var(--az-text);line-height:1.5;">{{ domanda }}</span>
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        }
+
+                        <!-- Disclaimer -->
+                        <div style="padding:10px 12px;border-radius:8px;background:var(--az-surface);border:1px solid var(--az-border);" role="note">
+                          <p style="font-size:11px;color:var(--az-muted);margin:0;line-height:1.5;">
+                            ⓘ Questa spiegazione è generata da un'AI a scopo informativo e <strong>non sostituisce il parere medico</strong>. Per qualsiasi dubbio consulta il tuo medico di riferimento.
+                          </p>
+                        </div>
+                      }
+
+                      <!-- Fallback testo libero per cache pre-strutturata -->
+                      @if (spiegazione()) {
+                        <div style="font-size:13px;color:var(--az-text);line-height:1.7;white-space:pre-wrap;background:var(--az-bg);padding:14px;border-radius:9px;border:1px solid var(--az-border);">{{ spiegazione() }}</div>
+                      }
+
+                    </div>
+                  </div>
+
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

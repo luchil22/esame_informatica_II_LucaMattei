@@ -1,0 +1,104 @@
+<!-- TopBar -->
+<div class="az-topbar">
+  <span class="az-topbar-label">Esplora prestazioni</span>
+  <div class="az-topbar-actions">
+    <div style="display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:8px;background:var(--az-input-bg);border:1px solid var(--az-border);font-size:12px;color:var(--az-sub);">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Alto Adige
+    </div>
+  </div>
+</div>
+
+<div class="az-content">
+  <h1 class="az-page-title">Cerca una prestazione sanitaria</h1>
+
+  <!-- Search -->
+  <div class="az-search-wrap">
+    <div class="az-search-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </div>
+    <input
+      type="text"
+      class="az-search-input"
+      placeholder="Cerca prestazione (es. Ecocardiogramma, Visita cardiologica...)"
+      [value]="termineCerca()"
+      (input)="termineCerca.set($any($event.target).value)"
+      (keyup.enter)="cerca()"
+      aria-label="Cerca prestazione" />
+    <button class="az-search-btn" (click)="cerca()" aria-label="Avvia ricerca">Cerca</button>
+  </div>
+
+  <!-- Filtri priorità -->
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:22px;flex-wrap:wrap;">
+    <span style="font-size:12px;color:var(--az-muted);">Classe priorità:</span>
+    <button class="az-chip" [class.active]="prioritaFiltro()==='B'" (click)="impostaPriorita('B')" aria-label="Filtra Breve">B — Breve</button>
+    <button class="az-chip" [class.active]="prioritaFiltro()==='D'" (click)="impostaPriorita('D')" aria-label="Filtra Differibile">D — Differibile</button>
+    <button class="az-chip" [class.active]="prioritaFiltro()==='P'" (click)="impostaPriorita('P')" aria-label="Filtra Programmabile">P — Programmabile</button>
+    <button class="az-chip" [class.active]="prioritaFiltro()==='' " (click)="impostaPriorita('')"  aria-label="Mostra tutte">Tutte</button>
+  </div>
+
+  @if (caricamento()) {
+    <div class="az-spinner-wrap" role="status">
+      <div class="az-spinner"></div>
+      <span class="visually-hidden">Caricamento in corso...</span>
+    </div>
+  }
+
+  @if (errore()) {
+    <div class="az-alert az-alert-danger" role="alert">{{ errore() }}</div>
+  }
+
+  <!-- Contatore risultati -->
+  @if (!caricamento() && risultatiFiltrati().length > 0) {
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <span style="font-size:13px;color:var(--az-sub);">
+        <strong style="color:var(--az-text);">{{ risultatiFiltrati().length }} prestazioni</strong> · ordinate per nome
+      </span>
+      <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:var(--az-muted);">
+        <div style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--az-primary);"></span>fonte istituzionale</div>
+      </div>
+    </div>
+  }
+
+  <!-- Lista prestazioni -->
+  @if (!caricamento()) {
+    @for (item of risultatiFiltrati(); track item.prestazione + item.priorita) {
+      <div class="az-pcard">
+        <div class="az-pcard-meta">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap;">
+            <span class="az-pcard-title">{{ item.prestazione }}</span>
+            <span class="az-badge-pub">{{ item.categoria }}</span>
+          </div>
+          <div style="font-size:12px;color:var(--az-muted);margin-bottom:6px;">Classe {{ item.priorita }} · {{ etichettaPriorita(item.priorita) }}</div>
+          @if (isLoggato()) {
+            <a class="az-btn az-btn-ghost" style="font-size:11px;padding:5px 10px;display:inline-flex;"
+              [routerLink]="['/dashboard']"
+              [queryParams]="{ prestazione: item.prestazione, priorita: item.priorita }"
+              aria-label="Aggiungi questa prestazione alle mie attese">
+              + Aggiungi alle mie attese
+            </a>
+          }
+        </div>
+        <div class="az-pill-official">
+          <div class="az-pill-num">{{ item.tempo_medio_attesa }}<span style="font-size:11px;font-weight:500;margin-left:2px;">gg</span></div>
+          <div style="font-size:9.5px;color:var(--az-primary);font-weight:600;margin-top:3px;letter-spacing:0.3px;opacity:0.75;">ASDAA · {{ item.priorita }}</div>
+        </div>
+      </div>
+    }
+
+    @if (risultatiFiltrati().length === 0) {
+      <div style="padding:14px 18px;border-radius:12px;border:1px dashed var(--az-border);background:var(--az-input-bg);">
+        <p style="font-size:13px;color:var(--az-muted);margin:0;">
+          Nessuna prestazione trovata.
+          <button style="background:none;border:none;color:var(--az-primary);font-size:13px;cursor:pointer;padding:0;" (click)="termineCerca.set('');cerca()">Mostra tutte</button>
+        </p>
+      </div>
+    }
+  }
+
+  @if (isLoggato()) {
+    <div style="margin-top:24px;padding:14px 16px;border-radius:11px;background:var(--az-primary-x);border:1px solid var(--az-primary-b);font-size:13px;color:var(--az-sub);line-height:1.55;">
+      Stai aspettando una di queste prestazioni? Aggiungila a <a routerLink="/dashboard" style="color:var(--az-primary);font-weight:600;">Le mie attese</a> per monitorare la soglia di legge e segnare la visita quando l'avrai fatta.
+    </div>
+  }
+</div>

@@ -1,0 +1,99 @@
+<!-- TopBar -->
+<div class="az-topbar">
+  <span class="az-topbar-label">Stato Pronto Soccorso live</span>
+  <div class="az-topbar-actions">
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--az-muted);">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ADE80;"></span>
+      Live
+    </div>
+    <button class="az-btn az-btn-ghost" style="padding:5px 12px;font-size:12px;" (click)="caricaDati()" aria-label="Aggiorna dati">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Aggiorna
+    </button>
+  </div>
+</div>
+
+<div class="az-content">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+    <div>
+      <h1 class="az-page-title" style="margin-bottom:4px;">Stato Pronto Soccorso — Alto Adige</h1>
+      <p style="font-size:13px;color:var(--az-sub);margin:0;">{{ ospedali().length }} strutture · dati ASDAA in tempo reale</p>
+    </div>
+    <div style="padding:8px 14px;border-radius:10px;background:var(--az-red-x);border:1px solid var(--az-red-b);display:flex;align-items:center;gap:7px;max-width:360px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--az-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="font-size:11px;color:var(--az-red);font-weight:600;">Emergenza? Chiama il <strong>118</strong>. Strumento solo informativo.</span>
+    </div>
+  </div>
+
+  @if (caricamento()) {
+    <div class="az-spinner-wrap" role="status">
+      <div class="az-spinner"></div>
+      <span class="visually-hidden">Caricamento in corso...</span>
+    </div>
+  }
+
+  @if (errore()) {
+    <div class="az-alert az-alert-danger" role="alert">{{ errore() }}</div>
+  }
+
+  @if (!caricamento()) {
+    <div class="az-ps-grid">
+      @for (ospedale of ospedali(); track ospedale.codice) {
+        <div class="az-ps-card">
+          <div class="az-ps-card-bar" [style.background]="coloreOspedale(ospedale)"></div>
+          <div class="az-ps-card-body">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div style="min-width:0;flex:1;">
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:var(--az-text);margin-bottom:2px;">{{ ospedale.nome }}</div>
+              </div>
+              <span [style]="badgeStyleOspedale(ospedale)">{{ livelloOspedale(ospedale) }}</span>
+            </div>
+
+            <div style="display:flex;align-items:baseline;gap:7px;">
+              <span class="az-ps-big-num">{{ totalePazienti(ospedale) }}</span>
+              <span style="font-size:13px;color:var(--az-muted);">in attesa</span>
+            </div>
+
+            <div class="az-triage-bar">
+              @for (triage of ospedale.triages; track triage.triage_code) {
+                @if (triage.queue_length > 0) {
+                  <div [style.width]="percentualeTriage(triage.queue_length, ospedale) + '%'"
+                       [style.background]="coloreTriage(triage.triage_code)"></div>
+                }
+              }
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              @for (triage of ospedale.triages; track triage.triage_code) {
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"
+                        [style.background]="coloreTriage(triage.triage_code)"
+                        [style.opacity]="triage.queue_length === 0 ? '0.18' : '1'"></span>
+                  <span style="flex:1;font-size:12px;"
+                        [style.color]="triage.queue_length === 0 ? 'var(--az-muted)' : 'var(--az-sub)'"
+                        [style.fontWeight]="triage.queue_length > 0 ? '500' : '400'">
+                    {{ triage.triage_description }}
+                  </span>
+                  <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;min-width:18px;text-align:right;"
+                        [style.color]="triage.queue_length === 0 ? 'var(--az-border)' : coloreTriage(triage.triage_code)">
+                    {{ triage.queue_length }}
+                  </span>
+                </div>
+              }
+            </div>
+
+            @if (ospedale.triages.length > 0) {
+              <div style="font-size:10px;color:var(--az-muted);padding-top:8px;border-top:1px solid var(--az-border);">
+                Aggiornato {{ ospedale.triages[0].last_update_time | date:'HH:mm' }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (ospedali().length === 0) {
+      <p style="color:var(--az-muted);">Nessun dato disponibile.</p>
+    }
+  }
+</div>

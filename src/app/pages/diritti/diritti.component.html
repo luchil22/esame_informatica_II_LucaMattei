@@ -1,0 +1,134 @@
+<!-- TopBar -->
+<div class="az-topbar">
+  <span class="az-topbar-label">Diritti &amp; Tutela</span>
+</div>
+
+<div class="az-content">
+  <h1 class="az-page-title mb-4">Diritti &amp; Tutela del paziente</h1>
+
+  <!-- Calcolatore: ho diritto al rimborso? -->
+  <div class="az-card mb-4">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--az-border);">
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--az-text);margin:0;">Hai diritto al rimborso?</h2>
+    </div>
+    <div class="az-card-body">
+      <p style="font-size:13px;color:var(--az-muted);margin-bottom:18px;">Inserisci la classe di priorità, la data di prenotazione e quella della visita per scoprire se hai diritto a richiedere la prestazione in struttura privata accreditata a carico SSN.</p>
+
+      <div class="az-form-row">
+        <div class="az-field az-field-md">
+          <label for="calcPriorita" class="az-label">Priorità</label>
+          <select id="calcPriorita" class="az-select"
+            [value]="prioritaSel()"
+            (change)="prioritaSel.set($any($event.target).value)"
+            aria-label="Classe di priorità">
+            <option value="U">U — Urgente (3 gg)</option>
+            <option value="B">B — Breve (10 gg)</option>
+            <option value="D">D — Differibile (30 gg)</option>
+            <option value="P">P — Programmabile (120 gg)</option>
+          </select>
+        </div>
+
+        <div class="az-field az-field-md">
+          <label for="calcPrenotazione" class="az-label">Data prenotazione</label>
+          <input id="calcPrenotazione" type="date" class="az-input"
+            [value]="dataPrenotazione()"
+            (input)="dataPrenotazione.set($any($event.target).value)"
+            aria-label="Data della prenotazione" />
+        </div>
+
+        <div class="az-field az-field-md">
+          <label for="calcVisita" class="az-label">Data visita (proposta o effettuata)</label>
+          <input id="calcVisita" type="date" class="az-input"
+            [value]="dataVisita()"
+            (input)="dataVisita.set($any($event.target).value)"
+            aria-label="Data della visita" />
+        </div>
+
+        <div class="az-field az-field-btn">
+          <button class="az-btn az-btn-ghost" style="width:100%;justify-content:center;"
+            (click)="reset()"
+            aria-label="Azzera il calcolatore">Reset</button>
+        </div>
+      </div>
+
+      @if (risultato() && risultato()!.dirittoRimborso) {
+        <div style="margin-top:18px;padding:14px 16px;border-radius:11px;background:rgba(196,46,46,0.06);border:1px solid rgba(196,46,46,0.20);" role="alert">
+          <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:var(--az-red);margin-bottom:4px;">Sì, hai diritto al rimborso</div>
+          <div style="font-size:13px;color:var(--az-sub);line-height:1.55;">
+            Tempo di attesa: <strong>{{ risultato()!.giorniAttesa }} giorni</strong> · Soglia di legge: <strong>{{ risultato()!.soglia }} giorni</strong>.
+            Puoi rivolgerti a una struttura privata accreditata e l'ASDAA è tenuta a coprire i costi della prestazione.
+          </div>
+        </div>
+      } @else if (risultato()) {
+        <div style="margin-top:18px;padding:14px 16px;border-radius:11px;background:rgba(46,160,86,0.06);border:1px solid rgba(46,160,86,0.20);" role="alert">
+          <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:#1F7A3D;margin-bottom:4px;">Attesa entro la soglia di legge</div>
+          <div style="font-size:13px;color:var(--az-sub);line-height:1.55;">
+            Tempo di attesa: <strong>{{ risultato()!.giorniAttesa }} giorni</strong> · Soglia: <strong>{{ risultato()!.soglia }} giorni</strong>.
+            In questo caso non è previsto il diritto al rimborso.
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Classi priorità -->
+  <div class="az-card mb-4">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--az-border);">
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--az-text);margin:0;">Classi di priorità sanitaria</h2>
+    </div>
+    <div class="az-card-body">
+      <p style="font-size:13px;color:var(--az-muted);margin-bottom:20px;">Ogni prestazione viene assegnata a una classe che determina il tempo massimo di attesa garantito dalla legge.</p>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        @for (p of priorita; track p.codice) {
+          <div style="padding:14px 16px;border-radius:11px;background:var(--az-surface);border:1px solid var(--az-border);display:flex;align-items:center;gap:16px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--az-primary-x);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:17px;color:var(--az-primary);">{{ p.codice }}</span>
+            </div>
+            <div style="flex:1;">
+              <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:var(--az-text);margin-bottom:2px;">{{ p.nome }}</div>
+              <div style="font-size:12px;color:var(--az-muted);">{{ p.descrizione }}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:var(--az-primary);">{{ p.giorni }}</div>
+              <div style="font-size:11px;color:var(--az-muted);">giorni max</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Diritti -->
+  <div class="az-card mb-4">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--az-border);">
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--az-text);margin:0;">I tuoi diritti</h2>
+    </div>
+    <div class="az-card-body">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="padding:14px 16px;border-radius:11px;background:var(--az-surface);border:1px solid var(--az-border);">
+          <div style="font-size:14px;font-weight:600;color:var(--az-text);margin-bottom:4px;">Rispetto dei tempi massimi</div>
+          <div style="font-size:13px;color:var(--az-sub);line-height:1.55;">Se l'ASDAA non riesce a erogarti la prestazione entro i tempi previsti, hai diritto a ottenerla presso un'altra struttura accreditata senza costi aggiuntivi.</div>
+        </div>
+        <div style="padding:14px 16px;border-radius:11px;background:var(--az-surface);border:1px solid var(--az-border);">
+          <div style="font-size:14px;font-weight:600;color:var(--az-text);margin-bottom:4px;">Libera scelta della struttura</div>
+          <div style="font-size:13px;color:var(--az-sub);line-height:1.55;">Puoi scegliere liberamente tra le strutture pubbliche e quelle private accreditate con il SSN in tutto il territorio nazionale.</div>
+        </div>
+        <div style="padding:14px 16px;border-radius:11px;background:var(--az-surface);border:1px solid var(--az-border);">
+          <div style="font-size:14px;font-weight:600;color:var(--az-text);margin-bottom:4px;">Presentare un reclamo</div>
+          <div style="font-size:13px;color:var(--az-sub);line-height:1.55;">Puoi presentare un reclamo all'URP (Ufficio Relazioni con il Pubblico) dell'ASDAA se ritieni che i tuoi diritti non siano stati rispettati.</div>
+        </div>
+        <div style="padding:14px 16px;border-radius:11px;background:var(--az-surface);border:1px solid var(--az-border);">
+          <div style="font-size:14px;font-weight:600;color:var(--az-text);margin-bottom:4px;">CUP ASDAA</div>
+          <div style="font-size:13px;color:var(--az-sub);line-height:1.55;">Prenotazioni tramite il Centro Unico Prenotazioni ASDAA. Telefono: <strong style="color:var(--az-primary);">0471 909090</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;border-radius:10px;background:var(--az-primary-x);border:1px solid var(--az-primary-b);">
+    <span style="font-size:12px;color:var(--az-primary);line-height:1.55;">
+      <strong>Nota:</strong> I dati mostrati nell'app provengono dall'Azienda Sanitaria dell'Alto Adige (ASDAA) e sono aggiornati periodicamente.
+    </span>
+  </div>
+</div>
