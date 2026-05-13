@@ -101,7 +101,7 @@ npm start
 
 Aprire il browser su **`http://localhost:4200/`**.
 
-Per provare le funzionalità private (S3 dashboard, S4 referti) è sufficiente registrarsi con una email qualsiasi e una password di almeno 6 caratteri dalla schermata di login. La registrazione è immediata, non richiede conferma email.
+Per provare le funzionalità private (S3 dashboard, S4 referti) registrarsi dalla schermata di login con una email valida e una password di almeno 6 caratteri. Supabase invia una mail di conferma con un link da cliccare: solo dopo la conferma il login è abilitato.
 
 ### In caso di problemi
 
