@@ -1,186 +1,145 @@
 # AttesaZero
 
-Progetto MVP per esame di **Informatica ed elementi di programmazione II** (UniTN).
-Portale che mostra i tempi di attesa sanitari della Provincia Autonoma di Bolzano (ASDAA) e lo stato dei Pronto Soccorso in tempo reale, con un hub personale "Le Mie Attese" per tracciare le proprie prenotazioni e un'area di gestione referti PDF con analisi AI.
+Progetto MVP per esame di **Informatica ed elementi di programmazione II** — UniTN.
+Autore: Luca Mattei.
 
-> Stack: **Angular 21** (standalone + Signals) · **Supabase** (DB, Auth, Storage, Edge Function) · **Bootstrap 5**.
-> Il corso richiedeva VueJS: l'uso di Angular è stato concordato e approvato dal docente.
+Portale web che mostra i tempi di attesa sanitari della Provincia Autonoma di Bolzano (ASDAA) e lo stato dei Pronto Soccorso in tempo reale. L'utente registrato può tracciare le proprie prenotazioni in un'area personale "Le Mie Attese", contribuire con i giorni reali attesi a visita conclusa, e caricare referti PDF per riceverne una spiegazione in linguaggio semplice generata da un modello AI.
 
----
-
-## A cosa serve
-
-L'utente può:
-
-1. consultare i tempi di attesa ufficiali ASDAA per prestazione e priorità (B / D / P);
-2. vedere lo stato dei Pronto Soccorso aggiornato in tempo reale dall'Open Data della Provincia;
-3. registrarsi/loggarsi e tracciare le proprie attese ("Le Mie Attese") con stato semaforo verde/giallo/rosso rispetto alla soglia di legge;
-4. al termine di una visita, contribuire al crowdsourcing inserendo i giorni reali attesi;
-5. caricare un referto PDF nel proprio spazio personale e chiederne una spiegazione in linguaggio semplice (Edge Function + Gemini);
-6. leggere una pagina statica di sintesi sui diritti del paziente in lista d'attesa.
+> Stack: **Angular 21** · **Supabase** (database, login, storage, edge function) · **Bootstrap 5**.
+> Il corso prevedeva VueJS: l'uso di Angular è stato concordato e approvato dal docente.
 
 ---
 
-## Schermate
+## Come funziona l'app
 
-| # | Rotta | Auth | Descrizione |
+1. **Esplora** — l'utente cerca una prestazione (es. "ecografia") e vede i giorni medi di attesa ufficiali ASDAA, divisi per priorità (Breve, Differibile, Programmabile).
+2. **Login / Registrazione** — email + password, gestiti da Supabase Auth.
+3. **Le Mie Attese (dashboard)** — l'utente loggato aggiunge una propria attesa indicando prestazione, priorità e data di prenotazione. La dashboard mostra ogni attesa con un semaforo:
+   - **verde** = entro i tempi di legge;
+   - **giallo** = soglia vicina;
+   - **rosso** = soglia superata → diritto al rimborso.
+4. **Visita effettuata** — l'utente conferma quanti giorni ha realmente atteso: il dato viene inserito in una tabella di recensioni community e l'attesa rimossa dal suo elenco.
+5. **Referti** — l'utente carica un PDF nel proprio spazio privato e, dando il consenso esplicito, lo manda al modello AI (Gemini) tramite una Edge Function. Riceve un riassunto in italiano semplice con valori principali e domande utili da fare al medico.
+6. **Pronto Soccorso** — schermata pubblica che mostra in tempo reale quante persone ci sono in ogni PS della provincia, raggruppate per ospedale (dati Open Data Bolzano).
+7. **Diritti & Tutela** — pagina informativa sui diritti del paziente in lista d'attesa.
+
+### Schermate
+
+| # | Rotta | Accesso | Cosa fa |
 |---|---|---|---|
-| S1 | `/login` | pubblica | Login e registrazione (Supabase Auth, email + password) |
-| S2 | `/esplora` | pubblica | Ricerca prestazioni e tempi ufficiali ASDAA. Bottone "Aggiungi alle mie attese" per gli utenti loggati (rimanda a S3) |
-| S3 | `/dashboard` | privata | Hub personale "Le Mie Attese". **INSERT attesa**, **DELETE attesa**, completamento visita → **INSERT recensione** |
-| S4 | `/referti` | privata | **Upload referti PDF** + lista + spiegazione AI con consenso esplicito |
-| S5 | `/diritti` | pubblica | Pagina statica: diritti del paziente e priorità sanitarie |
-| S6 | `/pronto-soccorso` | pubblica | Stato live dei PS provinciali (fetch diretto API esterna) |
+| S1 | `/login` | pubblica | Login e registrazione |
+| S2 | `/esplora` | pubblica | Ricerca prestazioni e tempi ufficiali ASDAA |
+| S3 | `/dashboard` | privata | "Le Mie Attese": aggiunta, eliminazione, completamento visita |
+| S4 | `/referti` | privata | Upload PDF + analisi AI con consenso |
+| S5 | `/diritti` | pubblica | Pagina statica sui diritti del paziente |
+| S6 | `/pronto-soccorso` | pubblica | Stato live dei PS provinciali |
 
-Le rotte private sono protette da `authGuard` ([src/app/guards/auth.guard.ts](src/app/guards/auth.guard.ts)).
-
----
-
-## Architettura
+### Struttura del codice
 
 ```
 src/app/
-├── core/services/
-│   ├── supabase.service.ts          # client Supabase singleton
-│   ├── auth.service.ts              # login/registra/logout + signal sessione
-│   ├── prestazioni.service.ts       # SELECT v_ultime_attese
-│   ├── pronto-soccorso.service.ts   # fetch diretto API esterna
-│   └── attese.service.ts            # CRUD attese_utente + flusso "completa visita"
-├── guards/auth.guard.ts             # protegge /dashboard e /referti
-├── pages/                           # una cartella per schermata (S1..S6)
-├── app.routes.ts                    # routing standalone con lazy loading
-└── app.config.ts                    # provider radice
+├── core/services/    # client Supabase, login, query DB, API esterna
+├── guards/           # protezione rotte private
+└── pages/            # una cartella per schermata (S1..S6)
 supabase/
-├── migrations/
-│   └── 20260512_attese_utente.sql   # schema + RLS della tabella attese_utente
-└── functions/
-    └── spiega-referto/              # Edge Function Deno: PDF → Gemini → JSON
+├── migrations/       # schema SQL della tabella attese_utente
+└── functions/        # Edge Function per l'analisi referti
 ```
 
-Pattern usati ovunque:
+Pattern:
 
-- componenti **standalone** Angular, niente `NgModule`;
-- stato locale con **Signals** (`signal`, `computed`), niente RxJS complessa né NgRx;
-- chiamate DB con **async/await** sul client `@supabase/supabase-js`;
-- UI con **classi Bootstrap 5 standard**, nessun CSS framework alternativo né Tailwind;
-- lazy loading delle pagine con `loadComponent`.
+- componenti Angular **standalone** con **Signals** per lo stato locale;
+- chiamate al database con `async/await`;
+- UI con classi **Bootstrap 5** standard;
+- lazy loading delle pagine.
 
----
+### Database e API esterna
 
-## Database e API esterna
+Schema completo in [references/data-architecture.md](references/data-architecture.md).
 
-Schema completo, RLS e query di riferimento in [references/data-architecture.md](references/data-architecture.md).
+- **Letture pubbliche**: tempi ASDAA, dizionario priorità.
+- **Tabelle private** (richiedono login): attese personali, recensioni, referti, spiegazioni AI.
+- **API esterna**: `https://dati.retecivica.bz.it/services/PS_Queue/json` per lo stato dei PS.
 
-**Letture pubbliche** (no auth):
-- `tempi_attesa_asdaa`, vista `v_ultime_attese` → S2
-- `dizionario_priorita` → S5
-- API esterna PS Bolzano → S6 (chiamata direttamente dal browser)
-
-**Tabelle private** con RLS `auth.uid() = user_id`:
-- `attese_utente` (SELECT + INSERT + DELETE da S3) — **interazione utente n.1**
-- `recensioni_attesa` (INSERT da S3 al completamento di un'attesa)
-- `referti` (SELECT + INSERT + DELETE da S4) + bucket Storage `referti` — **interazione utente n.2**
-- `referti_spiegazioni` (SELECT da client; INSERT solo da Edge Function con Service Role)
-
-**API esterna**: `https://dati.retecivica.bz.it/services/PS_Queue/json` (CORS aperto). Chiamata via `fetch()` direttamente da `ProntoSoccorsoService` ad ogni apertura di S6.
-
----
-
-## Requisiti d'esame — mappatura
+### Requisiti d'esame — mappatura
 
 | Requisito | Dove |
 |---|---|
 | ≥ 5 schermate | 6 schermate (S1–S6) |
-| Max 1 schermata statica | Solo S5 (`/diritti`) |
-| Login utente | S1, Supabase Auth |
-| ≥ 2 interazioni con modifica dati | 1) INSERT `attese_utente` da S3 (più completamento → INSERT `recensioni_attesa`) — 2) upload PDF + INSERT `referti` da S4 |
-| DB in lettura e scrittura | Lettura: `v_ultime_attese`, `attese_utente`, `referti`, `referti_spiegazioni`. Scrittura: `attese_utente`, `recensioni_attesa`, `referti`, Storage `referti` |
-| API esterna | Open Data PS Bolzano (vedi sopra) |
-| Responsiveness | Griglia Bootstrap su tutte le pagine |
-| Accessibilità | `aria-label`, `alt`, `role="alert"`, `role="status"`, navigazione tastiera |
+| Max 1 schermata statica | Solo S5 |
+| Login utente | Supabase Auth |
+| ≥ 2 interazioni con modifica dati | Aggiunta/completamento attesa (S3) · upload referto (S4) |
+| DB in lettura e scrittura | Sì, vedi tabella sopra |
+| API esterna | Open Data PS Bolzano |
+| Responsiveness | Griglia Bootstrap |
+| Accessibilità | `aria-label`, `alt`, `role`, navigazione tastiera |
 
 ---
 
-## Repo pubblico o privato?
+## Avvio in locale (per il docente)
 
-Il repository può tranquillamente essere **pubblico**: l'unica credenziale committata è l'**anon key** di Supabase ([src/environments/environment.ts](src/environments/environment.ts)), che per design è destinata al front-end ed è protetta dalle policy RLS sul DB. Nessuna riga può essere letta o scritta senza un JWT utente valido (login).
+L'app è già configurata per puntare al progetto Supabase usato in fase di sviluppo: **non serve creare un proprio database**, basta clonare e lanciare.
 
-Cosa **NON** deve mai finire nel repo (e infatti non c'è):
+### Prerequisiti
 
-- `SUPABASE_SERVICE_ROLE_KEY` → vive solo come secret della piattaforma Supabase, letta dalla Edge Function via `Deno.env.get()`.
-- `GEMINI_API_KEY` → idem, secret di Supabase.
-- File `.env` locali, dump del DB, PDF di referti reali.
+- **Node.js ≥ 20** ([nodejs.org](https://nodejs.org))
+- **npm** (installato insieme a Node)
 
-Se si preferisce comunque tenere il repo privato (es. per non esporre lo schema DB o l'URL del progetto), basta crearlo come *Private* su GitHub: nessuna modifica al codice è necessaria.
-
----
-
-## Configurazione
-
-### 1. Prerequisiti
-
-- Node.js ≥ 20
-- npm ≥ 10
-- Account Supabase (piano free sufficiente)
-- (Opzionale) Supabase CLI per fare il deploy della Edge Function
-
-### 2. Clonazione e dipendenze
+### Passi
 
 ```bash
-git clone <repo-url> attesazero
-cd attesazero
+# 1. Clona il repository
+git clone https://github.com/luchil22/esame_informatica_II_LucaMattei.git
+cd esame_informatica_II_LucaMattei
+
+# 2. Installa le dipendenze (la prima volta richiede 1-2 minuti)
 npm install
-```
 
-### 3. Configurazione Supabase
-
-Il file [src/environments/environment.ts](src/environments/environment.ts) contiene URL e chiave **anon (publishable)** del progetto Supabase. Per puntare a un'altra istanza:
-
-```ts
-export const environment = {
-  production: false,
-  supabaseUrl: 'https://<tuo-progetto>.supabase.co',
-  supabaseKey: '<anon-publishable-key>',
-};
-```
-
-La chiave da inserire qui è solo quella pubblica. La Service Role Key non va mai messa nel front-end.
-
-### 4. Schema DB
-
-Schema (tabelle, viste, RLS, bucket Storage) descritto in [references/data-architecture.md](references/data-architecture.md). Migrazione versionata della tabella `attese_utente` in [supabase/migrations/20260512_attese_utente.sql](supabase/migrations/20260512_attese_utente.sql). Le altre tabelle (`tempi_attesa_asdaa`, `recensioni_attesa`, `referti`, `referti_spiegazioni`, viste e bucket) vanno create via SQL editor seguendo gli statement riportati nel documento di architettura.
-
-Bucket Storage richiesto: `referti` (privato, policy: `(storage.foldername(name))[1] = auth.uid()::text`).
-
-### 5. Edge Function
-
-Codice in [supabase/functions/spiega-referto/](supabase/functions/spiega-referto/). Deploy con Supabase CLI:
-
-```bash
-supabase functions deploy spiega-referto
-```
-
-Secret necessario:
-
-```bash
-supabase secrets set GEMINI_API_KEY=<chiave-google-ai>
-```
-
-### 6. Avvio in locale
-
-```bash
+# 3. Avvia il dev server
 npm start
 ```
 
-App su `http://localhost:4200/`. Hot reload attivo.
+Aprire il browser su **`http://localhost:4200/`**.
 
-### 7. Build di produzione
+Per provare le funzionalità private (S3 dashboard, S4 referti) è sufficiente registrarsi con una email qualsiasi e una password di almeno 6 caratteri dalla schermata di login. La registrazione è immediata, non richiede conferma email.
+
+### In caso di problemi
+
+- Se `npm start` segnala porta occupata, chiudere eventuali altri server o cambiare porta con `npm start -- --port 4300`.
+- Se le pagine pubbliche caricano ma il login restituisce errore di rete, verificare la connessione a internet (l'app usa Supabase in cloud).
+
+---
+
+## Build di produzione
 
 ```bash
 npm run build
 ```
 
-Artefatti in `dist/`. Deployabili su qualsiasi static host (Vercel, Netlify, GitHub Pages, Supabase Hosting).
+Output statico in `dist/`, pronto per essere servito da qualsiasi hosting.
+
+---
+
+## Configurazione da zero (opzionale)
+
+Se il docente preferisce ricostruire l'ambiente Supabase da zero invece di usare quello già collegato:
+
+1. Creare un nuovo progetto su [supabase.com](https://supabase.com) (piano free sufficiente).
+2. Eseguire gli statement SQL descritti in [references/data-architecture.md](references/data-architecture.md) e la migrazione [supabase/migrations/20260512_attese_utente.sql](supabase/migrations/20260512_attese_utente.sql) dall'editor SQL di Supabase.
+3. Creare un bucket Storage privato di nome `referti`.
+4. Sostituire URL e chiave anon in [src/environments/environment.ts](src/environments/environment.ts):
+   ```ts
+   export const environment = {
+     production: false,
+     supabaseUrl: 'https://<tuo-progetto>.supabase.co',
+     supabaseKey: '<anon-key>',
+   };
+   ```
+5. (Solo per l'analisi referti AI) Installare la [Supabase CLI](https://supabase.com/docs/guides/cli) e deployare la Edge Function:
+   ```bash
+   supabase functions deploy spiega-referto
+   supabase secrets set GEMINI_API_KEY=<chiave-google-ai>
+   ```
 
 ---
 
@@ -188,16 +147,15 @@ Artefatti in `dist/`. Deployabili su qualsiasi static host (Vercel, Netlify, Git
 
 | Comando | Cosa fa |
 |---|---|
-| `npm start` | Dev server Angular su :4200 |
-| `npm run build` | Build di produzione in `dist/` |
-| `npm run watch` | Build incrementale in modalità dev |
-| `npm test` | Test unitari con Vitest |
+| `npm start` | Dev server su :4200 |
+| `npm run build` | Build di produzione |
+| `npm run watch` | Build incrementale |
+| `npm test` | Test con Vitest |
 
 ---
 
-## Note per l'orale
+## Note finali
 
-- Ogni metodo nei componenti/servizi è commentato in italiano e fa una cosa sola (≤ 25 righe).
-- Niente operatori esotici (no `switchMap`, no decoratori custom, no store globali): solo `async/await`, `if/else` espliciti e Signals.
-- Per ogni operazione DB è documentato in commento: tabella coinvolta, presenza/assenza di RLS, gestione errore.
-- La Service Role Key è usata **solo** dentro la Edge Function `spiega-referto`, mai esposta al client.
+- Ogni metodo nei componenti e nei servizi è commentato in italiano e fa una cosa sola.
+- Non sono usati operatori RxJS complessi né store globali: solo `async/await`, `if/else` espliciti e Signals.
+- Le credenziali sensibili (Service Role Key, chiave Gemini) vivono solo come secret della piattaforma Supabase, mai nel codice.
