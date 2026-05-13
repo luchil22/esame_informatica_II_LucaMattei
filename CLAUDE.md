@@ -1,7 +1,7 @@
 # CLAUDE.md — AttesaZero
 > Progetto universitario MVP · Provincia Autonoma di Bolzano (ASDAA)
 > Corso: Informatica ed elementi di programmazione II — UniTN
-> Stack: Angular 17+ · Supabase · Bootstrap 5
+> Stack: Angular 17+ · Supabase · Tailwind CSS
 
 ---
 
@@ -17,7 +17,7 @@ Il progetto vale 1/3 del voto (max 10 punti). L'orale è individuale e può vert
 | Min 2 interazioni con modifica dati (clic + input) | 1) Inserimento recensione attesa (S2) · 2) Upload referto PDF (S4) | ✅ |
 | Uso di un DB (lettura **e** scrittura) | Lettura: `tempi_attesa_asdaa`, `pronto_soccorso_status` · Scrittura: `recensioni_attesa`, `referti` | ✅ |
 | Uso di una API esterna | `https://dati.retecivica.bz.it/services/PS_Queue/json` (Pronto Soccorso live) | ✅ |
-| Responsiveness | Bootstrap 5 con griglia `.col-*` su tutte le schermate | ✅ |
+| Responsiveness | Utility responsive Tailwind (breakpoint `sm:`, `md:`, `lg:`) su tutte le schermate | ✅ |
 | Accessibilità | `aria-label`, `alt` su immagini, `role` su alert, navigazione da tastiera | ✅ da garantire |
 | Framework del corso | Il corso richiede VueJS — **il professore ha concesso Angular come modifica concordata** | ✅ approvato |
 
@@ -30,9 +30,9 @@ Il progetto vale 1/3 del voto (max 10 punti). L'orale è individuale e può vert
 ### Tecnologia
 - **Angular 17+** con componenti standalone e Signals *(modifica concordata col prof al posto di VueJS)*
 - **Supabase JS** (`@supabase/supabase-js`) per DB, Auth e Storage
-- **Bootstrap 5** per tutta la UI — solo classi standard (`.card`, `.container`, `.row`, `.col-*`, `.btn`, ecc.)
-- **VIETATO Tailwind CSS** e qualsiasi altro CSS framework (Material, PrimeNG, ecc.)
-- **VIETATO CSS custom elaborato** — al massimo pochi stili globali per colori brand
+- **Tailwind CSS** per tutta la UI — utility class direttamente nei template
+- **VIETATI altri CSS framework** (Bootstrap, Material, PrimeNG, ecc.)
+- **CSS custom elaborato** da evitare — al massimo pochi stili globali per colori brand
 
 ### Semplicità del codice (regola d'esame)
 Il codice deve essere **spiegabile a voce in 30 secondi per metodo**. L'esaminatore può fermarti su qualsiasi riga.
@@ -236,33 +236,31 @@ async caricaDati(): Promise<void> {
 }
 ```
 
-### Template Bootstrap standard (con accessibilità)
+### Template Tailwind standard (con accessibilità)
 ```html
 <!-- Spinner di caricamento -->
 @if (caricamento()) {
   <div class="text-center py-4">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Caricamento in corso...</span>
+    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" role="status">
+      <span class="sr-only">Caricamento in corso...</span>
     </div>
   </div>
 }
 
 <!-- Messaggio di errore -->
 @if (errore()) {
-  <div class="alert alert-danger" role="alert">{{ errore() }}</div>
+  <div class="rounded-md bg-red-50 border border-red-200 text-red-800 px-4 py-3" role="alert">{{ errore() }}</div>
 }
 
 <!-- Messaggio di successo -->
 @if (successo()) {
-  <div class="alert alert-success" role="alert">{{ successo() }}</div>
+  <div class="rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3" role="alert">{{ successo() }}</div>
 }
 
 <!-- Lista risultati -->
 @for (item of risultati(); track item.id) {
-  <div class="card mb-3">
-    <div class="card-body">
-      <h5 class="card-title">{{ item.prestazione }}</h5>
-    </div>
+  <div class="rounded-lg border border-gray-200 bg-white shadow-sm mb-3 p-4">
+    <h5 class="text-lg font-semibold">{{ item.prestazione }}</h5>
   </div>
 }
 ```
@@ -276,7 +274,7 @@ async caricaDati(): Promise<void> {
 | `switchMap`, `mergeMap` | `async/await` | Impossibile da spiegare a voce |
 | `BehaviorSubject` complessi | Signal | Più semplice e moderno |
 | `NgRx` / store | Stato locale nel componente | Overkill per un MVP universitario |
-| CSS custom elaborato | Solo classi Bootstrap | Requisito d'esame |
+| CSS custom elaborato | Utility Tailwind nei template | Coerenza e leggibilità |
 | Pipe custom | Metodo helper nel componente | Più leggibile all'orale |
 | `any` ovunque in TypeScript | Tipi semplici o interfacce brevi | Dimostra comprensione del codice |
 

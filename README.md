@@ -5,7 +5,7 @@ Autore: Luca Mattei.
 
 Portale web che mostra i tempi di attesa sanitari della Provincia Autonoma di Bolzano (ASDAA) e lo stato dei Pronto Soccorso in tempo reale. L'utente registrato può tracciare le proprie prenotazioni in un'area personale "Le Mie Attese", contribuire con i giorni reali attesi a visita conclusa, e caricare referti PDF per riceverne una spiegazione in linguaggio semplice generata da un modello AI.
 
-> Stack: **Angular 21** · **Supabase** (database, login, storage, edge function) · **Bootstrap 5**.
+> Stack: **Angular 21** · **Supabase** (database, login, storage, edge function) · **Tailwind CSS**.
 > Il corso prevedeva VueJS: l'uso di Angular è stato concordato e approvato dal docente.
 
 ---
@@ -50,7 +50,7 @@ Pattern:
 
 - componenti Angular **standalone** con **Signals** per lo stato locale;
 - chiamate al database con `async/await`;
-- UI con classi **Bootstrap 5** standard;
+- UI con utility **Tailwind CSS**;
 - lazy loading delle pagine.
 
 ### Database e API esterna
@@ -71,7 +71,7 @@ Schema completo in [references/data-architecture.md](references/data-architectur
 | ≥ 2 interazioni con modifica dati | Aggiunta/completamento attesa (S3) · upload referto (S4) |
 | DB in lettura e scrittura | Sì, vedi tabella sopra |
 | API esterna | Open Data PS Bolzano |
-| Responsiveness | Griglia Bootstrap |
+| Responsiveness | Utility responsive Tailwind (breakpoint `sm:`, `md:`, `lg:`) |
 | Accessibilità | `aria-label`, `alt`, `role`, navigazione tastiera |
 
 ---
