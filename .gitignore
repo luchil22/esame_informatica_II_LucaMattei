@@ -43,8 +43,6 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Guida di studio personale (non distribuita)
-README_STUDIO.md
 
 # Claude Code local settings
 .claude/
