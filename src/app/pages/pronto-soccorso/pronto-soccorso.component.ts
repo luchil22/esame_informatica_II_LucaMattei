@@ -1,6 +1,7 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ProntoSoccorsoService, ProntoSoccorsoStatus } from '../../core/services/pronto-soccorso.service';
+import { PsHistoryService, PsTrend } from '../../core/services/ps-history.service';
 
 // Struttura dati raggruppata usata nel template: un ospedale con tutti i suoi triage.
 // ProntoSoccorsoService restituisce righe piatte (una per triage); questo componente
@@ -24,6 +25,8 @@ const TRIAGE_COLORS: Record<string, string> = {
 // Pubblica: non richiede login.
 // NON usa il database Supabase: legge direttamente dall'API esterna ASDAA.
 // ← API ESTERNA richiesta dal requisito d'esame.
+// Salva inoltre uno snapshot dei totali in localStorage ad ogni refresh per
+// calcolare il trend ("+20% nell'ultima ora") — valore aggiunto rispetto al sito ASDAA.
 @Component({
   selector: 'app-pronto-soccorso',
   standalone: true,
@@ -35,15 +38,23 @@ export class ProntoSoccorsoComponent implements OnInit {
   caricamento = signal(false);
   errore      = signal('');
 
-  constructor(private psService: ProntoSoccorsoService) {}
+  // Trend per ospedale calcolato a ogni caricaDati() — null se non c'è ancora
+  // abbastanza storico (es. primo accesso). Indicizzato per hospital_code.
+  trends = signal<Record<string, PsTrend | null>>({});
+
+  constructor(
+    private psService:      ProntoSoccorsoService,
+    private historyService: PsHistoryService,
+  ) {}
 
   // Carica i dati al primo accesso alla pagina.
   async ngOnInit(): Promise<void> {
     await this.caricaDati();
   }
 
-  // Carica i dati dall'API, li raggruppa per ospedale e li ordina per affollamento crescente.
-  // Meno affollato = primo nella lista, così l'utente vede subito dove andare.
+  // Carica i dati dall'API, li raggruppa per ospedale, salva uno snapshot
+  // nello storico locale e calcola il trend per ogni ospedale.
+  // Ordina le card per affollamento decrescente (più pieno = primo).
   async caricaDati(): Promise<void> {
     this.caricamento.set(true);
     this.errore.set('');
@@ -57,7 +68,26 @@ export class ProntoSoccorsoComponent implements OnInit {
     }
 
     const gruppi = this.raggruppaPerOspedale(data);
-    gruppi.sort((a, b) => this.totalePazienti(a) - this.totalePazienti(b));
+
+    // Prepara la mappa { codice -> totale } per lo snapshot e per i trend.
+    const totali: Record<string, number> = {};
+    for (const g of gruppi) {
+      totali[g.codice] = this.totalePazienti(g);
+    }
+
+    // Calcola i trend PRIMA di salvare il nuovo snapshot, altrimenti il confronto
+    // userebbe come passato un dato appena scritto (= sempre stabile).
+    const trends: Record<string, PsTrend | null> = {};
+    for (const g of gruppi) {
+      trends[g.codice] = this.historyService.calcolaTrend(g.codice, totali[g.codice]);
+    }
+    this.trends.set(trends);
+
+    // Salva lo snapshot corrente in localStorage per i prossimi confronti.
+    this.historyService.salvaSnapshot(totali);
+
+    // Ordina per affollamento decrescente: più pieni in cima.
+    gruppi.sort((a, b) => this.totalePazienti(b) - this.totalePazienti(a));
     this.ospedali.set(gruppi);
     this.caricamento.set(false);
   }
@@ -99,11 +129,12 @@ export class ProntoSoccorsoComponent implements OnInit {
   }
 
   // Restituisce il colore della barra superiore della card in base all'affollamento totale.
+  // Soglie scelte sul dato osservato dall'API (la maggior parte degli ospedali ha 0-15 in attesa).
   coloreOspedale(ospedale: OspedaleGruppo): string {
     const tot = this.totalePazienti(ospedale);
     if (tot >= 20) return '#EF4444'; // alto
     if (tot >= 10) return '#FB923C'; // medio
-    return '#4ADE80';               // basso
+    return '#4ADE80';                // basso
   }
 
   // Restituisce il livello testuale dell'affollamento per il badge.
@@ -120,5 +151,33 @@ export class ProntoSoccorsoComponent implements OnInit {
     if (tot >= 20) return 'padding:3px 10px;border-radius:999px;background:rgba(239,68,68,0.10);color:#EF4444;font-size:9px;font-weight:800;letter-spacing:0.8px;flex-shrink:0;margin-left:8px;border:1px solid rgba(239,68,68,0.27);';
     if (tot >= 10) return 'padding:3px 10px;border-radius:999px;background:rgba(251,146,60,0.10);color:#FB923C;font-size:9px;font-weight:800;letter-spacing:0.8px;flex-shrink:0;margin-left:8px;border:1px solid rgba(251,146,60,0.27);';
     return 'padding:3px 10px;border-radius:999px;background:rgba(74,222,128,0.09);color:#4ADE80;font-size:9px;font-weight:800;letter-spacing:0.8px;flex-shrink:0;margin-left:8px;border:1px solid rgba(74,222,128,0.27);';
+  }
+
+  // Restituisce il trend memorizzato per un dato ospedale (o null se non disponibile).
+  trendOspedale(codice: string): PsTrend | null {
+    return this.trends()[codice] ?? null;
+  }
+
+  // Restituisce il colore della freccia trend: rosso se in aumento (peggiora),
+  // verde se in diminuzione (migliora), grigio se stabile.
+  coloreTrend(trend: PsTrend): string {
+    if (trend.dir === 'up')   return '#EF4444';
+    if (trend.dir === 'down') return '#4ADE80';
+    return '#94A3B8';
+  }
+
+  // Restituisce il simbolo freccia per il trend.
+  simboloTrend(trend: PsTrend): string {
+    if (trend.dir === 'up')   return '↑';
+    if (trend.dir === 'down') return '↓';
+    return '→';
+  }
+
+  // Restituisce un'etichetta testuale leggibile per il trend (es. "+20% in 45 min").
+  // Il segno '+' è esplicito per i valori positivi per chiarezza visiva.
+  etichettaTrend(trend: PsTrend): string {
+    const segno  = trend.deltaPct > 0 ? '+' : '';
+    const valore = Math.round(trend.deltaPct);
+    return `${segno}${valore}% in ${trend.minutiFa} min`;
   }
 }

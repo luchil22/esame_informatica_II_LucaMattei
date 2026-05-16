@@ -49,9 +49,23 @@
               <span [style]="badgeStyleOspedale(ospedale)">{{ livelloOspedale(ospedale) }}</span>
             </div>
 
-            <div style="display:flex;align-items:baseline;gap:7px;">
+            <div style="display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;">
               <span class="az-ps-big-num">{{ totalePazienti(ospedale) }}</span>
               <span style="font-size:13px;color:var(--az-muted);">in attesa</span>
+              @if (trendOspedale(ospedale.codice); as t) {
+                <span style="font-size:11px;font-weight:600;margin-left:auto;display:inline-flex;align-items:center;gap:4px;"
+                      [style.color]="coloreTrend(t)"
+                      [attr.aria-label]="'Trend ' + etichettaTrend(t)"
+                      title="Variazione rispetto allo snapshot più vecchio in finestra 25-75 min, salvato in localStorage di questo dispositivo">
+                  <span style="font-size:14px;line-height:1;">{{ simboloTrend(t) }}</span>
+                  {{ etichettaTrend(t) }}
+                </span>
+              } @else {
+                <span style="font-size:11px;color:var(--az-muted);margin-left:auto;"
+                      title="Servono almeno 25 minuti di storico locale per calcolare il trend.">
+                  trend —
+                </span>
+              }
             </div>
 
             <div class="az-triage-bar">
