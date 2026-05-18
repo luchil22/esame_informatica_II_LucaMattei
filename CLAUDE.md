@@ -308,54 +308,20 @@ async caricaDati(): Promise<void> {
 
 ---
 
-## Deploy su SiteGround (FTP)
+## Branch git — dove vanno i commit
 
-### Procedura
-```bash
-# 1. Build produzione (environment.ts deve avere production: true)
-npm run build
+Il repo ha due branch:
 
-# 2. Upload via FTP (credenziali in .env.deploy, NON committato)
-./scripts/deploy-ftp.sh
-```
+- **`main`** (default, visibile al professore): solo codice e documentazione utili per la lettura/orale d'esame. Niente file di deploy, niente guida di studio personale.
+- **`main-completo`**: contiene anche script FTP/SiteGround, `.env.example`, `README_STUDIO.md`, sezioni deploy nel CLAUDE.md. Branch di lavoro reale.
 
-### Struttura FTP SiteGround — ATTENZIONE
-L'utente FTP `luca@lucam223.sg-host.com` atterra nella **home root** `/`, NON dentro `lucam223.sg-host.com/`.
+### Regola per Claude Code
+- **Default**: ogni commit/PR va su `main-completo`. Se sei su `main`, fai `git checkout main-completo` prima di committare.
+- **Eccezione**: solo se l'utente dice esplicitamente "committa su main" / "porta su main" / "sincronizza il main pulito", allora porta le modifiche rilevanti (codice app, non deploy/studio) anche su `main`.
+- Per propagare codice da `main-completo` a `main`, usare `git checkout main` e cherry-pick o riapplicare i soli file dell'app (`src/`, `supabase/migrations`, `supabase/functions`, `README.md`, `CLAUDE.md` se necessario). **Mai** portare su `main` i file di deploy o `README_STUDIO.md`.
 
-Path corretto per i file del sito:
-```
-/lucam223.sg-host.com/public_html/   ← QUI vanno i file
-```
+---
 
-**Errore da evitare**: usare `FTP_REMOTE_DIR=/public_html` crea una cartella `public_html/` nella root FTP, FUORI dal dominio. Il sito NON vede i file e non viene servito.
-
-Configurazione corretta in `.env.deploy`:
-```bash
-FTP_REMOTE_DIR=/lucam223.sg-host.com/public_html
-```
-
-### File di deploy
-- `.env.deploy` — credenziali FTP (gitignored)
-- `.env.example` — template safe per repo
-- `scripts/deploy-ftp.sh` — upload via curl FTP
-- `scripts/ftp-cleanup-wrong-path.sh` — one-shot, cancella `/public_html` errata in root FTP
-
-### `.htaccess` (in `dist/attesazero/browser/`)
-- Force HTTPS redirect
-- SPA fallback `RewriteRule . /index.html [L]` — refresh su `/referti` non dà 404
-- Cache 1 anno su asset con hash, no-cache su `index.html`
-- Header sicurezza base (X-Frame-Options, nosniff, Referrer-Policy)
-
-### Checklist post-deploy
-1. Apri `https://lucam223.sg-host.com` → vedi S2 Esplora
-2. Test refresh su `/referti` → no 404 (verifica `.htaccess` attivo)
-3. Supabase Dashboard → Authentication → URL Configuration:
-   - Site URL: `https://lucam223.sg-host.com`
-   - Redirect URLs: `https://lucam223.sg-host.com/**`
-4. SSL Let's Encrypt: Site Tools → Security → SSL Manager
-5. Cancella SiteGround `Default.html` placeholder se ricreato
-
-### ⚠️ Sicurezza
-- Password FTP **non deve mai** finire in git. `.env.deploy` è in `.gitignore`.
-- Dopo deploy: cambiare password FTP da SiteGround → Site Tools → Site → FTP Accounts.
+## Sicurezza credenziali
+- Password FTP e altre credenziali deploy: mai in git. Stanno in `.env.deploy` (gitignored, presente solo in locale e su `main-completo` come template `.env.example`).
 - La Supabase anon key in `environment.ts` è pubblica per design (RLS protegge il DB).
