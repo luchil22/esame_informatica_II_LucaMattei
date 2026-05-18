@@ -1,6 +1,7 @@
 <div class="az-shell">
 
-  <!-- Sidebar desktop -->
+  <!-- Sidebar desktop — nascosta su /login (ha propria UI) -->
+  @if (!isLoginPage) {
   <aside class="az-sidebar" aria-label="Navigazione principale">
     <a class="az-logo" routerLink="/esplora" aria-label="AttesaZero - homepage">
       <div class="az-logo-icon">
@@ -71,8 +72,10 @@
       </a>
     }
   </aside>
+  } <!-- fine @if (!isLoginPage) sidebar -->
 
-  <!-- Mobile topbar -->
+  <!-- Mobile topbar — nascosta su /login -->
+  @if (!isLoginPage) {
   <div class="az-mobile-nav">
     <a routerLink="/esplora" class="az-mobile-brand" aria-label="AttesaZero - homepage">
       <div class="az-logo-icon">
@@ -98,6 +101,7 @@
 
   <!-- Mobile drawer -->
   <aside class="az-mobile-drawer" [class.open]="mobileMenuAperto" aria-label="Navigazione mobile">
+
     <div class="az-mobile-drawer-header">
       <div class="az-mobile-drawer-brand">
         <div class="az-logo-icon">
@@ -169,6 +173,7 @@
       </a>
     }
   </aside>
+  } <!-- fine @if (!isLoginPage) mobile nav + drawer -->
 
   <main class="az-main">
     <router-outlet />

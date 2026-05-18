@@ -5,6 +5,9 @@ Autore: Luca Mattei.
 
 Portale web che mostra i tempi di attesa sanitari della Provincia Autonoma di Bolzano (ASDAA) e lo stato dei Pronto Soccorso in tempo reale. L'utente registrato può tracciare le proprie prenotazioni in un'area personale "Le Mie Attese", contribuire con i giorni reali attesi a visita conclusa, e caricare referti PDF per riceverne una spiegazione in linguaggio semplice generata da un modello AI.
 
+> 🌐 **Demo live**: [https://lucam223.sg-host.com](https://lucam223.sg-host.com)
+> Hosting su SiteGround, backend Supabase. Per provare le funzionalità private (S3 e S4) registrarsi con email valida e confermare il link ricevuto via mail.
+
 > Stack: **Angular 21** · **Supabase** (database, login, storage, edge function) · **Tailwind CSS**.
 > Il corso prevedeva VueJS: l'uso di Angular è stato concordato e approvato dal docente.
 
@@ -76,7 +79,13 @@ Schema completo in [references/data-architecture.md](references/data-architectur
 
 ---
 
-## Avvio in locale (per il docente)
+## Provare l'app
+
+### Opzione 1 — Demo online (consigliata)
+
+Aprire **[https://lucam223.sg-host.com](https://lucam223.sg-host.com)** dal browser. Nessuna installazione richiesta.
+
+### Opzione 2 — Avvio in locale
 
 L'app è già configurata per puntare al progetto Supabase usato in fase di sviluppo: **non serve creare un proprio database**, basta clonare e lanciare.
 

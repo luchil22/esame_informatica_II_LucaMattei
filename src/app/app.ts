@@ -31,6 +31,9 @@ export class App {
     });
   }
 
+  // True quando la rotta corrente è /login: nasconde sidebar e mobile nav.
+  get isLoginPage(): boolean { return this.router.url.startsWith('/login'); }
+
   // Restituisce le prime due lettere dell'email in maiuscolo per l'avatar sidebar.
   // Esempio: "marco@email.it" → "MA"
   getInitials(): string {

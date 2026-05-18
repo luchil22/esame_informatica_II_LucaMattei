@@ -49,3 +49,8 @@ Thumbs.db
 
 # Supabase CLI temp
 supabase/.temp/
+
+# Env files con credenziali (FTP, deploy ecc.)
+.env
+.env.*
+!.env.example

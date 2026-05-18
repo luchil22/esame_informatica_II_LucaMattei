@@ -7,10 +7,9 @@ const GEMINI_MODELLI = [
 ]
 
 // Origini autorizzate a chiamare la function (no wildcard).
-// Sostituisci il dominio di produzione con quello reale al deploy.
 const ALLOWED_ORIGINS = [
   'http://localhost:4200',
-  'https://attesazero.example.it',
+  'https://lucam223.sg-host.com',
 ]
 
 // Costruisce gli header CORS riflettendo solo origini in allowlist

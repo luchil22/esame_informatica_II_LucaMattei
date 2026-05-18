@@ -305,3 +305,57 @@ async caricaDati(): Promise<void> {
 - Usa Service Role Key (bypassa RLS)
 - Salva in `referti_spiegazioni` (cache — non rigenera se esiste già)
 - L'utente **deve dare consenso esplicito** nell'UI prima che venga chiamata
+
+---
+
+## Deploy su SiteGround (FTP)
+
+### Procedura
+```bash
+# 1. Build produzione (environment.ts deve avere production: true)
+npm run build
+
+# 2. Upload via FTP (credenziali in .env.deploy, NON committato)
+./scripts/deploy-ftp.sh
+```
+
+### Struttura FTP SiteGround — ATTENZIONE
+L'utente FTP `luca@lucam223.sg-host.com` atterra nella **home root** `/`, NON dentro `lucam223.sg-host.com/`.
+
+Path corretto per i file del sito:
+```
+/lucam223.sg-host.com/public_html/   ← QUI vanno i file
+```
+
+**Errore da evitare**: usare `FTP_REMOTE_DIR=/public_html` crea una cartella `public_html/` nella root FTP, FUORI dal dominio. Il sito NON vede i file e non viene servito.
+
+Configurazione corretta in `.env.deploy`:
+```bash
+FTP_REMOTE_DIR=/lucam223.sg-host.com/public_html
+```
+
+### File di deploy
+- `.env.deploy` — credenziali FTP (gitignored)
+- `.env.example` — template safe per repo
+- `scripts/deploy-ftp.sh` — upload via curl FTP
+- `scripts/ftp-cleanup-wrong-path.sh` — one-shot, cancella `/public_html` errata in root FTP
+
+### `.htaccess` (in `dist/attesazero/browser/`)
+- Force HTTPS redirect
+- SPA fallback `RewriteRule . /index.html [L]` — refresh su `/referti` non dà 404
+- Cache 1 anno su asset con hash, no-cache su `index.html`
+- Header sicurezza base (X-Frame-Options, nosniff, Referrer-Policy)
+
+### Checklist post-deploy
+1. Apri `https://lucam223.sg-host.com` → vedi S2 Esplora
+2. Test refresh su `/referti` → no 404 (verifica `.htaccess` attivo)
+3. Supabase Dashboard → Authentication → URL Configuration:
+   - Site URL: `https://lucam223.sg-host.com`
+   - Redirect URLs: `https://lucam223.sg-host.com/**`
+4. SSL Let's Encrypt: Site Tools → Security → SSL Manager
+5. Cancella SiteGround `Default.html` placeholder se ricreato
+
+### ⚠️ Sicurezza
+- Password FTP **non deve mai** finire in git. `.env.deploy` è in `.gitignore`.
+- Dopo deploy: cambiare password FTP da SiteGround → Site Tools → Site → FTP Accounts.
+- La Supabase anon key in `environment.ts` è pubblica per design (RLS protegge il DB).
