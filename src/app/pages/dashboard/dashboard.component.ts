@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { AttesaService, AttesaCalcolata, AttesaUtente } from '../../core/services/attese.service';
+import { PrestazioniService } from '../../core/services/prestazioni.service';
 
 // Tipo locale per i referti da mostrare nel widget "Referti recenti".
 // Non include storage_path perché serve solo nome e data per questo riepilogo.
@@ -41,6 +42,10 @@ export class DashboardComponent implements OnInit {
   dataPrenotazione  = signal('');
   struttura         = signal('');
 
+  // Elenco fisso dei nomi prestazione per il menu a tendina del form.
+  // L'utente deve scegliere da questa lista, non può digitare testo libero.
+  nomiPrestazioni   = signal<string[]>([]);
+
   // Stato modale "visita effettuata" — attesaInCompletamento è null quando è chiusa.
   attesaInCompletamento = signal<AttesaCalcolata | null>(null);
   giorniReali           = signal<number | null>(null);
@@ -52,6 +57,7 @@ export class DashboardComponent implements OnInit {
     private auth: AuthService,
     private supabase: SupabaseService,
     private attesaService: AttesaService,
+    private prestazioniService: PrestazioniService,
     private route: ActivatedRoute
   ) {}
 
@@ -59,7 +65,19 @@ export class DashboardComponent implements OnInit {
   // Promise.all esegue le due query contemporaneamente (più veloce di sequential await).
   async ngOnInit(): Promise<void> {
     this.preimpostaFormDaQueryParam();
-    await Promise.all([this.caricaAttese(), this.caricaRefertiRecenti()]);
+    await Promise.all([
+      this.caricaAttese(),
+      this.caricaRefertiRecenti(),
+      this.caricaNomiPrestazioni(),
+    ]);
+  }
+
+  // Carica l'elenco fisso dei nomi prestazione per popolare il menu a tendina del form.
+  // LETTURA → vista: v_ultime_attese (nomi distinti, dati pubblici).
+  async caricaNomiPrestazioni(): Promise<void> {
+    const { data, error } = await this.prestazioniService.caricaNomiPrestazioni();
+    if (error) return; // non critico: il form resta usabile, mostra solo l'elenco vuoto
+    this.nomiPrestazioni.set(data);
   }
 
   // Se l'utente arriva da S2 (Esplora) tramite il link "Aggiungi alle mie attese",

@@ -52,11 +52,15 @@
         <div class="az-form-row">
           <div class="az-field az-field-lg">
             <label for="attPrestazione" class="az-label">Prestazione</label>
-            <input id="attPrestazione" type="text" class="az-input"
-              placeholder="Es. Visita cardiologica"
+            <select id="attPrestazione" class="az-select"
               [value]="prestazione()"
-              (input)="prestazione.set($any($event.target).value)"
-              aria-label="Nome della prestazione" />
+              (change)="prestazione.set($any($event.target).value)"
+              aria-label="Nome della prestazione">
+              <option value="">Seleziona una prestazione…</option>
+              @for (nome of nomiPrestazioni(); track nome) {
+                <option [value]="nome">{{ nome }}</option>
+              }
+            </select>
           </div>
 
           <div class="az-field az-field-md">

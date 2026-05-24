@@ -35,16 +35,34 @@ export class PrestazioniService {
     return { data: data as TempoAttesa[], error: '' };
   }
 
-  // Carica le prime 50 prestazioni senza filtri per il caricamento iniziale della pagina.
+  // Carica tutte le prestazioni senza filtri per il caricamento iniziale della pagina.
   // LETTURA → vista: v_ultime_attese (dati pubblici, nessun login richiesto).
+  // Niente .limit(): la vista ha circa 250 righe, ben sotto il tetto Supabase di 1000.
   async caricaTutte(): Promise<{ data: TempoAttesa[]; error: string }> {
     const { data, error } = await this.supabase.client
       .from('v_ultime_attese')
       .select('*')
-      .order('prestazione')
-      .limit(50);  // limite per non caricare centinaia di righe in una volta
+      .order('prestazione');
 
     if (error) return { data: [], error: 'Errore nel caricamento dei dati.' };
     return { data: data as TempoAttesa[], error: '' };
+  }
+
+  // Carica solo i nomi distinti delle prestazioni, ordinati alfabeticamente.
+  // Serve a popolare il menu a tendina del form: l'utente sceglie da un elenco fisso
+  // invece di digitare testo libero.
+  // LETTURA → vista: v_ultime_attese (dati pubblici, nessun login richiesto).
+  async caricaNomiPrestazioni(): Promise<{ data: string[]; error: string }> {
+    const { data, error } = await this.supabase.client
+      .from('v_ultime_attese')
+      .select('prestazione')
+      .order('prestazione');
+
+    if (error) return { data: [], error: 'Errore nel caricamento dell\'elenco prestazioni.' };
+
+    // Rimuove i duplicati: la vista può avere più righe per la stessa prestazione (priorità diverse).
+    const nomi = (data as { prestazione: string }[]).map(r => r.prestazione);
+    const distinti = Array.from(new Set(nomi));
+    return { data: distinti, error: '' };
   }
 }
