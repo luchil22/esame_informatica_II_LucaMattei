@@ -64,6 +64,23 @@ Da memorizzare *parola per parola*: serve a partire senza esitazioni.
 
 ---
 
+## 1-bis. La storia da raccontare (apertura narrata)
+
+> Questo capitolo è il racconto in prima persona da pronunciare dopo il pitch, se l'esaminatore chiede «come è nato» o «come hai ragionato». Non è da imparare a memoria: è il filo del discorso.
+
+Sono partito dal dominio prima ancora che dal codice. Mi interessava lavorare sui dati sanitari, perché sono dati che restano utili nel tempo e riguardano tutti. Ho cercato negli open data di Trento e di Bolzano: Trento non pubblicava i tempi di attesa medi nel dettaglio, Bolzano sì, e in più esponeva gli accessi ai pronto soccorso. Per questo ho scelto i dati ASDAA.
+
+Sullo stack ho ragionato così: Angular lo conoscevo già e mi ci trovo bene per app di questo tipo (l'uso al posto di Vue è concordato col docente); Supabase mi dava database, login, storage e funzioni serverless in un solo provider, e si integra bene con Angular; Tailwind con le utility inline più una classe globale per le variabili di stile, per non riscrivere colori e misure ogni volta. La stesura del codice l'ho fatta con l'aiuto di Claude Code, ma le scelte di progetto e la struttura sono mie.
+
+Le funzionalità sono nate una alla volta. I tempi di attesa: ho preso il CSV ASDAA e l'ho trasformato in una query SQL per popolare la tabella (giorno medio a febbraio 2026, nome prestazione, priorità), ed è quello che filtro in Esplora. Il pronto soccorso: ho trovato l'API pubblica della Provincia, ma i soli numeri mi sembravano fini a sé stessi, così ho aggiunto la funzione trend che mostra se l'affluenza sale o scende nell'ultima ora. I referti: spesso sono illeggibili per il paziente, quindi ho fatto la sezione che carica un PDF, controlla che sia davvero un referto e lo fa spiegare da Gemini 2.5 Flash (leggero, gratuito, perfetto per la demo) con riassunto, valori d'attenzione e domande per il medico. Infine Diritti & Tutela: la pagina più statica, un form per capire se si ha diritto al rimborso quando si superano i limiti di legge.
+
+**Domande probabili**
+- *Perché Bolzano e non Trento?* → Trento non pubblicava i tempi medi dettagliati; Bolzano sì, più gli accessi PS via API.
+- *Perché Supabase?* → Un solo provider per DB, auth, storage e funzioni. Meno pezzi da incollare insieme.
+- *Hai usato l'AI per scrivere il codice?* → Sì, Claude Code come strumento di stesura. Le decisioni di architettura, lo schema dati e le scelte tecnologiche le ho prese io, e so spiegare ogni riga.
+
+---
+
 ## 2. Slide 2 — Problema e soluzione
 
 ### Il problema
