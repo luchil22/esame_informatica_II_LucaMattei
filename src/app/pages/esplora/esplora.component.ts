@@ -28,6 +28,24 @@ export class EsploraComponent implements OnInit {
     return this.risultati().filter(r => r.priorita === this.prioritaFiltro());
   });
 
+  // --- Paginazione ---
+  // Mostriamo 20 prestazioni per pagina invece di tutte le ~250 in una volta.
+  perPagina      = 20;
+  paginaCorrente = signal(1);
+
+  // Numero totale di pagine: arrotonda per eccesso (es. 41 risultati → 3 pagine).
+  numeroPagine = computed(() => {
+    const totale = this.risultatiFiltrati().length;
+    return Math.ceil(totale / this.perPagina);
+  });
+
+  // Solo le righe della pagina corrente: taglia l'array filtrato con slice().
+  risultatiPaginati = computed(() => {
+    const inizio = (this.paginaCorrente() - 1) * this.perPagina;
+    const fine   = inizio + this.perPagina;
+    return this.risultatiFiltrati().slice(inizio, fine);
+  });
+
   constructor(
     private prestazioniService: PrestazioniService,
     private auth: AuthService
@@ -43,6 +61,7 @@ export class EsploraComponent implements OnInit {
   async caricaTutte(): Promise<void> {
     this.caricamento.set(true);
     this.errore.set('');
+    this.paginaCorrente.set(1);
 
     const { data, error } = await this.prestazioniService.caricaTutte();
 
@@ -67,6 +86,7 @@ export class EsploraComponent implements OnInit {
 
     this.caricamento.set(true);
     this.errore.set('');
+    this.paginaCorrente.set(1);
 
     const { data, error } = await this.prestazioniService.cercaPrestazioni(this.termineCerca());
 
@@ -82,8 +102,38 @@ export class EsploraComponent implements OnInit {
 
   // Imposta il filtro priorità per i chip B/D/P/Tutte.
   // Non fa query: filtra i dati già in memoria con computed().
+  // Torna a pagina 1 perché il numero di risultati cambia.
   impostaPriorita(p: string): void {
     this.prioritaFiltro.set(p);
+    this.paginaCorrente.set(1);
+  }
+
+  // Vai alla pagina precedente, senza scendere sotto la 1.
+  paginaPrecedente(): void {
+    if (this.paginaCorrente() > 1) {
+      this.paginaCorrente.set(this.paginaCorrente() - 1);
+    }
+  }
+
+  // Vai alla pagina successiva, senza superare il numero totale di pagine.
+  paginaSuccessiva(): void {
+    if (this.paginaCorrente() < this.numeroPagine()) {
+      this.paginaCorrente.set(this.paginaCorrente() + 1);
+    }
+  }
+
+  // Vai direttamente a una pagina specifica (usato dai numeri di pagina).
+  vaiAPagina(n: number): void {
+    this.paginaCorrente.set(n);
+  }
+
+  // Restituisce l'elenco dei numeri di pagina [1, 2, 3, ...] per i bottoni.
+  elencoPagine(): number[] {
+    const pagine: number[] = [];
+    for (let i = 1; i <= this.numeroPagine(); i++) {
+      pagine.push(i);
+    }
+    return pagine;
   }
 
   // Indica se l'utente è loggato per mostrare azioni aggiuntive nel template.

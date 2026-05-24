@@ -53,6 +53,9 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
       <span style="font-size:13px;color:var(--az-sub);">
         <strong style="color:var(--az-text);">{{ risultatiFiltrati().length }} prestazioni</strong> · ordinate per nome
+        @if (numeroPagine() > 1) {
+          · pagina {{ paginaCorrente() }} di {{ numeroPagine() }}
+        }
       </span>
       <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:var(--az-muted);">
         <div style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--az-primary);"></span>fonte istituzionale</div>
@@ -60,9 +63,9 @@
     </div>
   }
 
-  <!-- Lista prestazioni -->
+  <!-- Lista prestazioni (solo la pagina corrente) -->
   @if (!caricamento()) {
-    @for (item of risultatiFiltrati(); track item.prestazione + item.priorita) {
+    @for (item of risultatiPaginati(); track item.prestazione + item.priorita) {
       <div class="az-pcard">
         <div class="az-pcard-meta">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap;">
@@ -93,6 +96,29 @@
           <button style="background:none;border:none;color:var(--az-primary);font-size:13px;cursor:pointer;padding:0;" (click)="termineCerca.set('');cerca()">Mostra tutte</button>
         </p>
       </div>
+    }
+
+    <!-- Barra di paginazione: compare solo se c'è più di una pagina -->
+    @if (numeroPagine() > 1) {
+      <nav style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:20px;flex-wrap:wrap;" aria-label="Navigazione pagine">
+        <button class="az-chip"
+          [disabled]="paginaCorrente() === 1"
+          (click)="paginaPrecedente()"
+          aria-label="Pagina precedente">‹ Indietro</button>
+
+        @for (n of elencoPagine(); track n) {
+          <button class="az-chip"
+            [class.active]="paginaCorrente() === n"
+            (click)="vaiAPagina(n)"
+            [attr.aria-label]="'Vai a pagina ' + n"
+            [attr.aria-current]="paginaCorrente() === n ? 'page' : null">{{ n }}</button>
+        }
+
+        <button class="az-chip"
+          [disabled]="paginaCorrente() === numeroPagine()"
+          (click)="paginaSuccessiva()"
+          aria-label="Pagina successiva">Avanti ›</button>
+      </nav>
     }
   }
 
