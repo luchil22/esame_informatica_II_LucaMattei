@@ -93,51 +93,26 @@ Schema completo in [references/data-architecture.md](references/data-architectur
 
 ## Provare l'app
 
-### Opzione 1: demo online (consigliata)
+**Demo online** (nessuna installazione): [https://lucam223.sg-host.com](https://lucam223.sg-host.com)
 
-Aprire **[https://lucam223.sg-host.com](https://lucam223.sg-host.com)** dal browser. Nessuna installazione richiesta.
-
-### Opzione 2: avvio in locale
-
-L'app è già configurata per puntare al progetto Supabase usato in fase di sviluppo: **non serve creare un proprio database**, basta clonare e lanciare.
-
-### Prerequisiti
-
-- **Node.js ≥ 20** ([nodejs.org](https://nodejs.org))
-- **npm** (installato insieme a Node)
-
-### Passi
+**In locale** (richiede Node.js ≥ 20):
 
 ```bash
-# 1. Clona il repository
 git clone https://github.com/luchil22/esame_informatica_II_LucaMattei.git
 cd esame_informatica_II_LucaMattei
-
-# 2. Installa le dipendenze (la prima volta richiede 1-2 minuti)
 npm install
-
-# 3. Avvia il dev server
 npm start
 ```
 
-Aprire il browser su **`http://localhost:4200/`**.
+Server su `http://localhost:4200/`. L'app è già collegata al progetto Supabase tramite la chiave anon pubblica in [src/environments/environment.ts](src/environments/environment.ts): non serve creare alcun database.
 
-Per provare le funzionalità private (S3 dashboard, S4 referti) registrarsi dalla schermata di login con una email valida e una password di almeno 6 caratteri. Supabase invia una mail di conferma con un link da cliccare: solo dopo la conferma il login è abilitato.
+Per le funzionalità private (S3 dashboard, S4 referti) registrarsi dal login con email valida: Supabase invia un link di conferma, e solo dopo la conferma il login è abilitato.
 
-### In caso di problemi
-
-- Se `npm start` segnala porta occupata, chiudere eventuali altri server o cambiare porta con `npm start -- --port 4300`.
-- Se le pagine pubbliche caricano ma il login restituisce errore di rete, verificare la connessione a internet (l'app usa Supabase in cloud).
-
----
-
-## Build di produzione
+### Build di produzione
 
 ```bash
 npm run build
 ```
 
-Output statico in `dist/`, pronto per essere servito da qualsiasi hosting.
-
-> L'app è già collegata al progetto Supabase di sviluppo tramite la chiave anon pubblica in [src/environments/environment.ts](src/environments/environment.ts). Non serve creare un database né configurare nulla: clonare, `npm install`, `npm start`.
+Output statico in `dist/`.
 
