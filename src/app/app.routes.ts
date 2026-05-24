@@ -11,3 +11,4 @@ export const routes: Routes = [
   { path: 'referti',         loadComponent: () => import('./pages/referti/referti.component').then(m => m.RefertiComponent), canActivate: [authGuard] },
   { path: '**',              redirectTo: 'esplora' },
 ];
+  
