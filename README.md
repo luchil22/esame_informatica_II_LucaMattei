@@ -15,15 +15,13 @@ Portale web che mostra i tempi di attesa sanitari della Provincia Autonoma di Bo
 
 ## Genesi e scelte di progetto
 
-Il punto di partenza è stato il dominio: i dati sanitari. Sono dati che restano utili nel tempo e che toccano chiunque, e per questo si prestavano a un'applicazione con un'utilità concreta per il cittadino. La prima fase è stata quindi una ricerca sugli open data delle due province autonome, Trento e Bolzano. Trento non pubblicava i tempi di attesa medi con il dettaglio per prestazione; Bolzano sì, e in più esponeva gli accessi ai pronto soccorso. La scelta è ricaduta sui dati ASDAA proprio perché coprivano entrambi i bisogni: tempi medi delle prestazioni e affluenza in tempo reale.
+Il dominio è venuto prima di tutto: i dati sanitari toccano chiunque e restano utili nel tempo. Ho confrontato gli open data di Trento e Bolzano. Trento non pubblicava i tempi medi per singola prestazione, Bolzano sì, e in più esponeva gli accessi ai pronto soccorso. I dati ASDAA coprivano entrambi i bisogni, e la scelta è caduta lì.
 
-Definito il dominio, è seguita la scelta dello stack. La scelta è caduta su Angular per via dell'esperienza già maturata su applicazioni di questo tipo, comode da gestire con questo framework; l'uso al posto di VueJS previsto dal corso è una modifica concordata e approvata dal docente. Il backend poggia su Supabase, che raccoglie sotto un solo provider database, autenticazione, storage dei file e funzioni serverless: una flessibilità che si integra bene con Angular ed evita di incollare insieme servizi separati. La veste grafica usa Tailwind CSS con le utility inline nei template, affiancate da una classe globale per le variabili di stile, così da non riscrivere gli stessi colori e le stesse misure a ogni componente.
+Per lo stack ho usato Angular, framework su cui avevo già esperienza con app di questo tipo (l'uso al posto di VueJS previsto dal corso è concordato e approvato dal docente). Il backend è Supabase, che riunisce sotto un solo provider database, autenticazione, storage e funzioni serverless, e si integra bene con Angular senza incollare servizi separati. La UI usa Tailwind con utility inline nei template e una classe globale per le variabili di stile, così da non riscrivere colori e misure a ogni componente.
 
-Le funzionalità sono nate una alla volta, ciascuna da un bisogno preciso. I tempi di attesa partono da un file CSV ASDAA convertito in una query SQL che ha popolato la tabella delle prestazioni: per ognuna restano il giorno medio di attesa (dato aggiornato a febbraio 2026, l'ultimo disponibile), il nome e la classe di priorità, ed è questo che permette di filtrarle nella sezione Esplora. Il pronto soccorso usa invece l'API pubblica della Provincia di Bolzano. I soli numeri di accesso, però, dicono poco: difficile capire se venti persone in un ospedale grande siano tante o poche rispetto a uno piccolo. Da qui la funzione trend, che confronta gli accessi recenti e mostra se l'affluenza sta salendo o scendendo nell'ultima ora, restituendo un'informazione leggibile anche a chi non conosce le dimensioni della struttura.
+Le funzioni sono nate una a una. I tempi di attesa partono da un CSV ASDAA convertito in SQL: per ogni prestazione restano giorno medio di attesa (dato a febbraio 2026, l'ultimo disponibile), nome e classe di priorità, ed è ciò che la sezione Esplora filtra. Il pronto soccorso legge l'API pubblica della Provincia. I soli numeri di accesso dicono poco (venti persone sono tante o poche?), perciò la funzione trend confronta gli accessi recenti e mostra se l'affluenza sale o scende nell'ultima ora. La sezione referti accetta un PDF, verifica che sia davvero un referto e lo manda a Gemini 2.5 Flash (modello leggero e gratuito), che ne estrae le informazioni principali, i valori a cui prestare attenzione e qualche domanda da rivolgere al medico. Diritti & Tutela, schermata volutamente statica, spiega quando scatta il diritto al rimborso per una prestazione svolta in privato dopo il superamento dei limiti di legge.
 
-L'integrazione dell'intelligenza artificiale risponde a un problema quotidiano: i referti di ecografie ed esami sono spesso scritti in un linguaggio strettamente medico, di difficile lettura per il paziente. La sezione dedicata accetta il caricamento di un PDF, verifica che si tratti davvero di un referto e, in caso contrario, lo segnala senza procedere. Il file viene analizzato da Gemini 2.5 Flash, un modello leggero, gratuito e adatto a questo compito, che produce un riassunto delle informazioni principali, i valori a cui prestare attenzione e alcune domande utili da rivolgere al medico. L'ultima pagina è Diritti & Tutela: un form, su una schermata volutamente statica, che aiuta a capire quando si ha diritto al rimborso per una prestazione svolta in struttura privata, un diritto che scatta al superamento dei limiti di legge e che spesso resta sconosciuto.
-
-Sul piano dell'organizzazione del codice, due decisioni reggono l'impianto. La prima: tutto ciò che parla con l'esterno vive nei servizi in `core/services`, mentre i componenti delle pagine si limitano a chiedere i dati senza sapere come vengono recuperati. La seconda: la sicurezza dei dati privati non è affidata al codice dell'applicazione ma alle policy Row Level Security di Postgres, scritte direttamente nel database. La chiave pubblica esposta nel frontend è tale per progettazione, e a proteggere le tabelle è il fatto che ogni riga riservata risulta accessibile solo al suo proprietario.
+Due decisioni reggono il codice. Tutto ciò che parla con l'esterno vive nei servizi in `core/services`; i componenti delle pagine chiedono i dati senza sapere come arrivano. E la sicurezza dei dati privati non sta nel codice dell'app ma nelle policy Row Level Security di Postgres: la chiave pubblica nel frontend è tale per progettazione, e ogni riga riservata resta accessibile solo al suo proprietario.
 
 ---
 
@@ -141,27 +139,5 @@ npm run build
 
 Output statico in `dist/`, pronto per essere servito da qualsiasi hosting.
 
----
-
-## Configurazione da zero (opzionale)
-
-Se il docente preferisce ricostruire l'ambiente Supabase da zero invece di usare quello già collegato:
-
-1. Creare un nuovo progetto su [supabase.com](https://supabase.com) (piano free sufficiente).
-2. Eseguire gli statement SQL descritti in [references/data-architecture.md](references/data-architecture.md) e la migrazione [supabase/migrations/20260512_attese_utente.sql](supabase/migrations/20260512_attese_utente.sql) dall'editor SQL di Supabase.
-3. Creare un bucket Storage privato di nome `referti`.
-4. Sostituire URL e chiave anon in [src/environments/environment.ts](src/environments/environment.ts):
-   ```ts
-   export const environment = {
-     production: false,
-     supabaseUrl: 'https://<tuo-progetto>.supabase.co',
-     supabaseKey: '<anon-key>',
-   };
-   ```
-5. (Solo per l'analisi referti AI) Installare la [Supabase CLI](https://supabase.com/docs/guides/cli) e deployare la Edge Function:
-   ```bash
-   supabase functions deploy spiega-referto
-   supabase secrets set GEMINI_API_KEY=<chiave-google-ai>
-   ```
-
+> L'app è già collegata al progetto Supabase di sviluppo tramite la chiave anon pubblica in [src/environments/environment.ts](src/environments/environment.ts). Non serve creare un database né configurare nulla: clonare, `npm install`, `npm start`.
 
