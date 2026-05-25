@@ -38,6 +38,13 @@ Due decisioni reggono il codice. Tutto ciò che parla con l'esterno vive nei ser
 6. **Pronto Soccorso**: schermata pubblica che mostra in tempo reale quante persone ci sono in ogni PS della provincia, raggruppate per ospedale (dati Open Data Bolzano).
 7. **Diritti & Tutela**: pagina informativa sui diritti del paziente in lista d'attesa.
 
+### Autenticazione: dove viene salvata la sessione
+
+- L'app usa `@supabase/supabase-js` tramite `SupabaseService` (`createClient(...)` senza storage custom).
+- Dopo login/registrazione, Supabase mantiene la sessione in **`localStorage`** del browser (comportamento standard del client web).
+- All'avvio, `AuthService` richiama `auth.getSession()` per ricaricare la sessione salvata e aggiorna il signal `sessione`.
+- `authGuard` aspetta `sessioneCaricata` e permette le rotte private solo se la sessione è presente.
+
 ### Schermate
 
 | # | Rotta | Accesso | Cosa fa |
@@ -115,4 +122,3 @@ npm run build
 ```
 
 Output statico in `dist/`.
-
